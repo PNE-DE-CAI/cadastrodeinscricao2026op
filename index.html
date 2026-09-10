@@ -7,8 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 
-<!-- Firebase SDK -->
+<!-- Firebase SDKs - TODOS necessários -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
@@ -38,16 +39,14 @@ body{
   min-height:100vh;color:var(--texto-corpo);line-height:1.6;
   -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
-h1,h2,h3,h4{font-family:'DM Sans',sans-serif;font-weight:800;line-height:1.2}
+h1,h2,h3,h4{font-weight:800;line-height:1.2}
 .page{display:none;animation:fadeUp .4s ease forwards}
 .page.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes confetti-fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
-@keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,.3)}50%{box-shadow:0 0 0 8px rgba(211,47,47,0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* NAV */
 nav{
   background:linear-gradient(135deg,rgba(10,47,108,.97) 0%,rgba(4,26,58,.99) 100%);
   padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:68px;
@@ -60,30 +59,18 @@ nav .brand-text{display:flex;flex-direction:column}
 nav .brand-text .brand-title{color:var(--dourado);font-weight:800;font-size:.9rem;letter-spacing:.3px}
 nav .brand-text .brand-sub{color:rgba(255,236,158,.45);font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase}
 nav .nav-links{display:flex;gap:4px}
-nav .nav-links button{
-  background:none;border:none;color:rgba(255,255,255,.55);font-family:'DM Sans',sans-serif;
-  font-size:.82rem;font-weight:600;padding:8px 16px;border-radius:var(--raio-pill);cursor:pointer;
-  transition:all .25s ease;letter-spacing:.02em;
-}
+nav .nav-links button{background:none;border:none;color:rgba(255,255,255,.55);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;padding:8px 16px;border-radius:var(--raio-pill);cursor:pointer;transition:all .25s ease}
 nav .nav-links button:hover{color:#fff;background:rgba(255,255,255,.08)}
 nav .nav-links button.active{color:var(--dourado);background:rgba(211,47,47,.2);font-weight:700}
-.sync-indicator{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:.7rem;font-family:'DM Mono',monospace}
-.sync-dot{width:8px;height:8px;border-radius:50%;transition:all .3s}
+.sync-indicator{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:.7rem;font-family:'DM Mono',monospace;white-space:nowrap}
+.sync-dot{width:8px;height:8px;border-radius:50%;transition:all .3s;flex-shrink:0}
 .sync-dot.online{background:var(--verde);box-shadow:0 0 6px rgba(22,163,74,.6)}
 .sync-dot.offline{background:var(--vermelho);box-shadow:0 0 6px rgba(211,47,47,.6)}
 .sync-dot.loading{background:var(--dourado);animation:spin 1s linear infinite}
 
 .main-wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
-
-/* HERO */
-.hero-card{
-  background:linear-gradient(135deg,rgba(10,47,108,.95) 0%,rgba(4,26,58,.98) 100%);
-  border-radius:var(--raio-grande);padding:3.5rem 2.5rem;text-align:center;
-  position:relative;overflow:hidden;
-  box-shadow:var(--sombra-float);border:1px solid rgba(255,236,158,.08);
-  margin-bottom:2rem;animation:fadeUp .5s ease;
-}
-.hero-card::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(211,47,47,.12) 0%,transparent 65%);pointer-events:none}
+.hero-card{background:linear-gradient(135deg,rgba(10,47,108,.95),rgba(4,26,58,.98));border-radius:var(--raio-grande);padding:3.5rem 2.5rem;text-align:center;position:relative;overflow:hidden;box-shadow:var(--sombra-float);border:1px solid rgba(255,236,158,.08);margin-bottom:2rem;animation:fadeUp .5s ease}
+.hero-card::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(211,47,47,.12),transparent 65%);pointer-events:none}
 .hero-card *{position:relative;z-index:1}
 .hero-badge{display:inline-block;background:var(--vermelho);color:#fff;padding:6px 24px;border-radius:var(--raio-pill);font-weight:800;letter-spacing:1.5px;font-size:.7rem;text-transform:uppercase;box-shadow:0 4px 16px rgba(211,47,47,.4);margin-bottom:24px}
 .hero-card h1{color:#fff;font-size:2.4rem;margin-bottom:8px}
@@ -92,19 +79,18 @@ nav .nav-links button.active{color:var(--dourado);background:rgba(211,47,47,.2);
 .hero-card p{color:var(--texto-footer);font-size:.95rem;max-width:520px;margin:0 auto 2rem}
 .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .hero-stats{display:flex;gap:16px;justify-content:center;margin-top:24px;flex-wrap:wrap}
-.hero-stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);padding:8px 20px;border-radius:var(--raio-pill);color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.04em}
+.hero-stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);padding:8px 20px;border-radius:var(--raio-pill);color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;font-size:.75rem}
 .hero-stat b{color:var(--dourado)}
 
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;border-radius:var(--raio-pill);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .25s ease;letter-spacing:.02em;text-decoration:none}
-.btn-primary{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:#fff;box-shadow:0 4px 16px rgba(10,47,108,.3);border:1px solid rgba(255,236,158,.1)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;border-radius:var(--raio-pill);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .25s ease;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:#fff;box-shadow:0 4px 16px rgba(10,47,108,.3)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,47,108,.4)}
 .btn-accent{background:linear-gradient(135deg,var(--vermelho),var(--vermelho-hover));color:#fff;box-shadow:0 4px 16px rgba(211,47,47,.3)}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(211,47,47,.4)}
+.btn-accent:hover{transform:translateY(-2px)}
 .btn-gold{background:linear-gradient(135deg,var(--dourado),#f0d060);color:var(--azul-profundo);font-weight:800;box-shadow:0 4px 16px rgba(255,236,158,.3)}
-.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,236,158,.4)}
+.btn-gold:hover{transform:translateY(-2px)}
 .btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.25)}
-.btn-outline:hover{border-color:var(--dourado);color:var(--dourado);background:rgba(255,236,158,.05)}
+.btn-outline:hover{border-color:var(--dourado);color:var(--dourado)}
 .btn-ghost{background:rgba(255,255,255,.05);color:var(--texto-footer);border:1px solid rgba(255,255,255,.1);padding:10px 20px}
 .btn-ghost:hover{border-color:rgba(255,236,158,.3);color:var(--dourado)}
 .btn-danger{background:var(--vermelho);color:#fff}
@@ -112,14 +98,12 @@ nav .nav-links button.active{color:var(--dourado);background:rgba(211,47,47,.2);
 .btn-lg{padding:14px 36px;font-size:1rem}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
 
-/* CARDS */
 .card{background:#fff;border-radius:var(--raio-card);padding:2rem;box-shadow:var(--sombra-card);border:1.5px solid rgba(10,47,108,.08);animation:fadeUp .4s ease forwards;position:relative;overflow:hidden}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--azul-escuro),var(--vermelho),var(--dourado))}
 .card-header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--borda-fina)}
 .card-header h2{font-size:1.4rem;color:var(--azul-escuro)}
 .card-header p{color:var(--texto-muted);font-size:.9rem;margin-top:4px}
 
-/* STEPS */
 .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:2.5rem}
 .step-item{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--texto-suave);font-weight:600}
 .step-item .step-num{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--borda-clara);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;transition:all .3s ease}
@@ -129,18 +113,15 @@ nav .nav-links button.active{color:var(--dourado);background:rgba(211,47,47,.2);
 .step-line{width:44px;height:2.5px;background:var(--borda-fina);margin:0 8px;border-radius:2px}
 .step-line.done{background:var(--verde)}
 
-/* FORMS */
 .form-group{margin-bottom:1.25rem}
 .form-group label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--texto-corpo)}
 .form-group label .req{color:var(--vermelho)}
 .form-control{width:100%;padding:12px 16px;border:2px solid var(--borda-clara);border-radius:var(--raio-pequeno);font-family:'DM Sans',sans-serif;font-size:.95rem;transition:all .25s ease;background:#fff;color:var(--texto-corpo)}
 .form-control:focus{outline:none;border-color:var(--azul-medio);box-shadow:0 0 0 3px rgba(18,63,122,.1)}
 .form-control::placeholder{color:var(--texto-suave)}
-select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-@media(max-width:600px){.form-row{grid-template-columns:1fr}}
 
-/* SESSIONS */
 .session-card{background:#fff;border:2px solid var(--borda-clara);border-radius:var(--raio-card);padding:1.5rem;margin-bottom:1.25rem;transition:all .25s ease;position:relative;overflow:hidden}
 .session-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--azul-escuro),var(--vermelho))}
 .session-card:hover{border-color:var(--azul-medio);box-shadow:var(--sombra-card)}
@@ -149,7 +130,6 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .session-date{display:flex;align-items:center;gap:8px}
 .session-date .date-badge{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:#fff;padding:6px 16px;border-radius:var(--raio-pill);font-weight:800;font-size:.85rem;font-family:'DM Mono',monospace}
 .session-date .period-badge{background:var(--amarelo-bg);color:var(--amarelo-texto);padding:6px 14px;border-radius:var(--raio-pill);font-weight:700;font-size:.8rem}
-.session-theme{color:var(--texto-muted);font-size:.88rem;margin-bottom:.75rem;font-style:italic}
 .session-audience{display:inline-flex;align-items:center;gap:6px;background:var(--azul-badge-bg);color:var(--azul-badge-txt);padding:5px 14px;border-radius:var(--raio-pill);font-size:.78rem;font-weight:700}
 .session-fixed{background:var(--verde-bg);color:var(--verde-escuro);padding:14px 18px;border-radius:var(--raio-pequeno);font-weight:700;display:flex;align-items:center;gap:10px;font-size:.9rem;border:1.5px solid #86efac}
 .session-optional{background:var(--azul-badge-bg);color:var(--azul-badge-txt);padding:8px 14px;border-radius:var(--raio-pequeno);font-size:.78rem;font-weight:600;margin-bottom:.75rem;display:flex;align-items:center;gap:6px}
@@ -173,7 +153,6 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .cap-bar-fill.mid{background:#ca8a04}
 .cap-bar-fill.high{background:var(--vermelho)}
 
-/* CARD PREVIEW */
 .card-preview{background:#fff;border-radius:var(--raio-card);overflow:hidden;max-width:680px;margin:0 auto;box-shadow:var(--sombra-float);border:2px solid rgba(10,47,108,.1)}
 .card-preview-header{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));padding:2.25rem 2rem;text-align:center;color:#fff;position:relative}
 .card-preview-header::after{content:'';position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:28px;height:28px;background:#fff;border:3px solid var(--azul-escuro);border-radius:50%}
@@ -182,18 +161,16 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .card-preview-header .ev-name{font-size:.85rem;color:var(--texto-footer);font-weight:400}
 .card-preview-body{padding:1.75rem 2rem 2rem}
 .card-participant-info{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:2px dashed var(--borda-fina)}
-.card-participant-info .info-item{font-size:.85rem}
 .card-participant-info .info-item .info-label{color:var(--texto-suave);font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;font-weight:500}
 .card-participant-info .info-item .info-value{font-weight:700;color:var(--azul-escuro);margin-top:2px}
 .card-schedule{width:100%;border-collapse:collapse;font-size:.82rem;border-radius:var(--raio-pequeno);overflow:hidden}
-.card-schedule th{background:var(--azul-escuro);color:#fff;padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
+.card-schedule th{background:var(--azul-escuro);color:#fff;padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
 .card-schedule td{padding:10px 14px;border-bottom:1px solid var(--borda-fina)}
 .card-schedule tr:last-child td{border-bottom:none}
 .card-schedule tr:nth-child(even){background:var(--superficie)}
-.card-footer{background:var(--superficie);padding:14px 2rem;text-align:center;border-top:1.5px solid var(--borda-fina);font-family:'DM Mono',monospace;font-size:.72rem;color:var(--texto-suave);letter-spacing:.06em}
+.card-footer{background:var(--superficie);padding:14px 2rem;text-align:center;border-top:1.5px solid var(--borda-fina);font-family:'DM Mono',monospace;font-size:.72rem;color:var(--texto-suave)}
 .card-id{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;color:var(--vermelho);letter-spacing:.12em}
 
-/* SEARCH */
 .search-box{position:relative;max-width:500px;margin:0 auto 2rem}
 .search-box input{width:100%;padding:14px 14px 14px 48px;border:2px solid var(--borda-clara);border-radius:var(--raio-pill);font-size:.95rem;font-family:'DM Sans',sans-serif;transition:all .25s ease;background:#fff}
 .search-box input:focus{outline:none;border-color:var(--azul-medio);box-shadow:0 0 0 3px rgba(18,63,122,.1)}
@@ -203,53 +180,45 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .result-info h4{font-size:1.05rem;color:var(--azul-escuro);margin-bottom:4px}
 .result-info p{font-size:.85rem;color:var(--texto-muted)}
 
-/* BADGES */
-.badge{display:inline-block;padding:3px 12px;border-radius:var(--raio-pill);font-family:'DM Mono',monospace;font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.badge{display:inline-block;padding:3px 12px;border-radius:var(--raio-pill);font-family:'DM Mono',monospace;font-size:.68rem;font-weight:600;text-transform:uppercase}
 .badge-success{background:var(--verde-bg);color:var(--verde-escuro)}
 .badge-danger{background:var(--vermelho-bg);color:var(--vermelho)}
 .badge-warning{background:var(--amarelo-bg);color:var(--amarelo-texto)}
 .badge-info{background:var(--azul-badge-bg);color:var(--azul-badge-txt)}
 .badge-role{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:var(--dourado);padding:4px 14px;font-size:.7rem;font-weight:700}
 
-/* ALERTS */
 .alert{padding:14px 18px;border-radius:var(--raio-medio);font-size:.88rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px}
 .alert-info{background:var(--azul-badge-bg);color:var(--azul-badge-txt);border-left:4px solid var(--azul-medio)}
 .alert-success{background:var(--verde-bg);color:var(--verde-escuro);border-left:4px solid var(--verde)}
 .alert-warning{background:var(--amarelo-bg);color:var(--amarelo-texto);border-left:4px solid #ca8a04}
 .alert-danger{background:var(--vermelho-bg);color:var(--vermelho);border-left:4px solid var(--vermelho)}
 
-/* CONFIRM */
 .confirm-box{background:var(--superficie);border:1.5px solid var(--borda-fina);border-radius:var(--raio-medio);padding:1.25rem;margin-bottom:1rem}
 .confirm-box h4{font-size:.75rem;color:var(--texto-suave);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;font-weight:500}
 
-/* ADMIN */
 .admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
-.stat-card{background:#fff;border:1.5px solid var(--borda-clara);border-radius:var(--raio-card);padding:1.25rem;text-align:center;transition:all .25s ease}
-.stat-card:hover{box-shadow:var(--sombra-card)}
-.stat-card .stat-value{font-family:'DM Sans',sans-serif;font-size:2rem;font-weight:800;color:var(--azul-escuro)}
+.stat-card{background:#fff;border:1.5px solid var(--borda-clara);border-radius:var(--raio-card);padding:1.25rem;text-align:center}
+.stat-card .stat-value{font-size:2rem;font-weight:800;color:var(--azul-escuro)}
 .stat-card .stat-label{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--texto-suave);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
 .admin-table-wrap{overflow-x:auto;border-radius:var(--raio-medio);border:1.5px solid var(--borda-fina)}
 .admin-table{width:100%;border-collapse:collapse;font-size:.82rem}
-.admin-table th{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));color:#fff;padding:10px 14px;text-align:left;white-space:nowrap;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
+.admin-table th{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));color:#fff;padding:10px 14px;text-align:left;white-space:nowrap;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
 .admin-table td{padding:10px 14px;border-bottom:1px solid var(--borda-fina)}
 .admin-table tr:hover{background:var(--superficie)}
 
-/* TABS */
-.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:2.5px solid var(--borda-fina);padding-bottom:0;flex-wrap:wrap}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:2.5px solid var(--borda-fina);flex-wrap:wrap}
 .tab-btn{background:none;border:none;padding:10px 20px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;color:var(--texto-suave);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2.5px;transition:all .25s ease}
 .tab-btn:hover{color:var(--azul-escuro)}
 .tab-btn.active{color:var(--vermelho);border-bottom-color:var(--vermelho);font-weight:700}
 .tab-content{display:none;animation:fadeIn .3s ease}
 .tab-content.active{display:block}
 
-/* PASSWORD */
 .pw-gate{max-width:420px;margin:4rem auto;text-align:center}
 .pw-gate .pw-icon{width:72px;height:72px;background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:1.5rem;color:var(--dourado);box-shadow:0 8px 24px rgba(10,47,108,.25)}
 
-/* PROGRAM TABLE */
 .prog-table-wrap{overflow-x:auto;border-radius:var(--raio-medio);border:1.5px solid var(--borda-fina);margin-top:1.5rem}
 .prog-table{width:100%;border-collapse:collapse;font-size:.82rem}
-.prog-table th{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));color:#fff;padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
+.prog-table th{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));color:#fff;padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
 .prog-table td{padding:10px 14px;border-bottom:1px solid var(--borda-fina);vertical-align:top}
 .prog-table tr:nth-child(even){background:var(--superficie)}
 .prog-table .day-num{font-family:'DM Mono',monospace;font-weight:700;color:var(--azul-escuro);background:var(--azul-badge-bg);padding:4px 10px;border-radius:var(--raio-pill);font-size:.85rem}
@@ -257,7 +226,6 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .period-manha{background:#dcfce7;color:#14532d}
 .period-tarde{background:#fef3c7;color:#92400e}
 
-/* TOAST */
 .toast-container{position:fixed;top:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{padding:14px 20px;border-radius:var(--raio-medio);font-size:.88rem;font-weight:600;color:#fff;box-shadow:var(--sombra-float);animation:slideInToast .3s ease;max-width:380px;display:flex;align-items:center;gap:10px}
 .toast-success{background:linear-gradient(135deg,var(--verde),#15803d)}
@@ -266,32 +234,24 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 @keyframes slideInToast{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
 
 .confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden}
-.confetti-piece{position:absolute;width:10px;height:10px;top:-10px;animation:confetti-fall 3s ease-in forwards}
+.confetti-piece{position:absolute;top:-10px;animation:confetti-fall 3s ease-in forwards}
 
-/* LOADING OVERLAY */
 .loading-overlay{position:fixed;inset:0;background:rgba(4,22,51,.7);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .loading-overlay .spinner{width:48px;height:48px;border:4px solid rgba(255,236,158,.2);border-top-color:var(--dourado);border-radius:50%;animation:spin .8s linear infinite}
 
-@media print{nav,.no-print,.toast-container{display:none!important}body{background:#fff!important;padding:0;font-size:8pt}.page{display:none!important}#page-print{display:block!important}.card-preview{border-width:2px;box-shadow:none;max-width:100%;margin:0;border-radius:0}.main-wrap{padding:0;max-width:100%}.card{box-shadow:none;border-radius:0}}
+@media print{nav,.no-print,.toast-container,.loading-overlay{display:none!important}body{background:#fff!important}.page{display:none!important}#page-print{display:block!important}.card-preview{box-shadow:none;max-width:100%;border-radius:0}}
 @media(max-width:768px){
-  nav{padding:0 1rem;height:60px;flex-wrap:wrap}
-  nav .brand img{height:32px}
-  nav .brand-text .brand-title{font-size:.78rem}
-  nav .brand-text .brand-sub{display:none}
+  nav{padding:0 1rem;height:auto;min-height:60px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+  nav .brand img{height:32px}nav .brand-text .brand-sub{display:none}
   nav .nav-links button{font-size:.75rem;padding:6px 10px}
-  .hero-card h1{font-size:1.7rem}
-  .main-wrap{padding:1.25rem 1rem}
-  .workshop-options{grid-template-columns:1fr}
-  .card-participant-info{grid-template-columns:1fr}
-  .card-preview-body{padding:1.25rem}
-  .admin-stats{grid-template-columns:1fr 1fr}
-  .form-row{grid-template-columns:1fr}
+  .hero-card h1{font-size:1.7rem}.main-wrap{padding:1.25rem 1rem}
+  .workshop-options{grid-template-columns:1fr}.card-participant-info{grid-template-columns:1fr}
+  .admin-stats{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}
 }
-@media(max-width:480px){nav .nav-links{gap:2px}nav .nav-links button{padding:5px 8px;font-size:.7rem}.hero-card{padding:2rem 1.25rem;border-radius:var(--raio-card)}}
+@media(max-width:480px){nav .nav-links button{padding:5px 8px;font-size:.7rem}.hero-card{padding:2rem 1.25rem;border-radius:var(--raio-card)}}
 ::-webkit-scrollbar{width:8px}
 ::-webkit-scrollbar-track{background:var(--fundo-externo)}
 ::-webkit-scrollbar-thumb{background:var(--azul-medio);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:var(--azul-escuro)}
 </style>
 </head>
 <body>
@@ -305,8 +265,7 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
     </div>
   </div>
   <div class="nav-links">
-    <button onclick="showPage('home')" data-page="home" class="active">Início</button>
-    <button onclick="showPage('register')" data-page="register">Inscrição</button>
+    <button onclick="showPage('home')" data-page="showPage('register')" data-page="register">Inscrição</button>
     <button onclick="showPage('consult')" data-page="consult">Consultar</button>
     <button onclick="showPage('admin')" data-page="admin">Admin</button>
   </div>
@@ -315,12 +274,12 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 
 <div class="toast-container" id="toastBox"></div>
 
-<!-- HOME -->
 <div id="page-home" class="page active">
-  <div class="main-wrap">
+  ="home" class="active">Início</button>
+    <button onclick<div class="main-wrap">
     <div class="hero-card">
       <div class="hero-badge">URE Caieiras</div>
-      <h1>Oficinas Pedagógicas 2026<span>Sistema de Inscrição Online</span></h1>
+      <h1>Oficinas Pedagógicas 2025<span>Sistema de Inscrição Online</span></h1>
       <div class="hero-line"></div>
       <p>Inscreva-se nas oficinas de formação. Escolha livremente os dias e oficinas que deseja participar.</p>
       <div class="hero-actions">
@@ -335,26 +294,23 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
     </div>
     <div class="card" style="animation-delay:.15s">
       <div class="card-header"><h2>Programação</h2><p>Resumo das atividades por dia e período</p></div>
-      <div class="prog-table-wrap">
-        <table class="prog-table">
-          <thead><tr><th>Data</th><th>Período</th><th>Tema / Atividade</th><th>Público</th><th>Tipo</th></tr></thead>
-          <tbody>
-            <tr><td><span class="day-num">15</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Pauta dos Supervisores</td><td>Diretores das 67 UEs</td><td><span class="badge badge-success">Fixa</span></td></tr>
-            <tr><td><span class="day-num">15</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Oficinas</td><td>Diretores das 67 UEs</td><td><span class="badge badge-info">5 opções</span></td></tr>
-            <tr><td><span class="day-num">16</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Oficinas</td><td>Coordenadores das 67 UEs</td><td><span class="badge badge-info">2 opções</span></td></tr>
-            <tr><td><span class="day-num">16</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Plenária Destinada aos Professores</td><td>Professores por Grupo</td><td><span class="badge badge-success">Fixa</span></td></tr>
-            <tr><td><span class="day-num">17</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Oficinas por Dentro do Currículo</td><td>Professores por Grupo</td><td><span class="badge badge-info">5 opções</span></td></tr>
-            <tr><td><span class="day-num">17</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Oficinas por Dentro do Currículo</td><td>Professores por Grupo</td><td><span class="badge badge-info">5 opções</span></td></tr>
-            <tr><td><span class="day-num">18</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Oficinas por Dentro do Currículo</td><td>Professores por Grupo</td><td><span class="badge badge-info">5 opções</span></td></tr>
-            <tr><td><span class="day-num">18</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Encerramento / Premiação</td><td>Diretores & Coordenadores</td><td><span class="badge badge-success">Fixa</span></td></tr>
-          </tbody>
-        </table>
-      </div>
+      <div class="prog-table-wrap"><table class="prog-table">
+        <thead><tr><th>Data</th><th>Período</th><th>Tema</th><th>Público</th><th>Tipo</th></tr></thead>
+        <tbody>
+          <tr><td><span class="day-num">15</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Pauta dos Supervisores</td><td>Diretores</td><td><span class="badge badge-success">Fixa</span></td></tr>
+          <tr><td><span class="day-num">15</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Oficinas</td><td>Diretores</td><td><span class="badge badge-info">5 opções</span></td></tr>
+          <tr><td><span class="day-num">16</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Oficinas</td><td>Coordenadores</td><td><span class="badge badge-info">2 opções</span></td></tr>
+          <tr><td><span class="day-num">16</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Plenária Professores</td><td>Professores</td><td><span class="badge badge-success">Fixa</span></td></tr>
+          <tr><td><span class="day-num">17</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Oficinas por Dentro do Currículo</td><td>Professores</td><td><span class="badge badge-info">5 opções</span></td></tr>
+          <tr><td><span class="day-num">17</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Oficinas por Dentro do Currículo</td><td>Professores</td><td><span class="badge badge-info">5 opções</span></td></tr>
+          <tr><td><span class="day-num">18</span></td><td><span class="period-tag period-manha">Manhã</span></td><td>Oficinas por Dentro do Currículo</td><td>Professores</td><td><span class="badge badge-info">5 opções</span></td></tr>
+          <tr><td><span class="day-num">18</span></td><td><span class="period-tag period-tarde">Tarde</span></td><td>Encerramento / Premiação</td><td>Diretores & Coord.</td><td><span class="badge badge-success">Fixa</span></td></tr>
+        </tbody>
+      </table></div>
     </div>
   </div>
 </div>
 
-<!-- REGISTER -->
 <div id="page-register" class="page">
   <div class="main-wrap">
     <div class="steps" id="stepsBar">
@@ -368,7 +324,7 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
       <div class="card-header"><h2>Dados Pessoais</h2><p>Preencha suas informações para realizar a inscrição</p></div>
       <div id="step1Alert"></div>
       <div class="form-row">
-        <div class="form-group"><label>Nome Completo <span class="req">*</span></label><input type="text" class="form-control" id="regName" placeholder="Digite seu nome completo"></div>
+        <div class="form-group"><label>Nome Completo <span class="req">*</span></label><input type="text" class="form-control" id="regName" placeholder="Nome completo"></div>
         <div class="form-group"><label>CPF <span class="req">*</span></label><input type="text" class="form-control" id="regCPF" placeholder="000.000.000-00" maxlength="14"></div>
       </div>
       <div class="form-row">
@@ -377,7 +333,7 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
       </div>
       <div class="form-row">
         <div class="form-group"><label>Perfil <span class="req">*</span></label><select class="form-control" id="regRole"><option value="">Selecione...</option><option value="diretor">Diretor(a)</option><option value="coordenador">Coordenador(a)</option><option value="professor">Professor(a)</option></select></div>
-        <div class="form-group"><label>Unidade Escolar (UE) <span class="req">*</span></label><input type="text" class="form-control" id="regSchool" placeholder="Nome da UE"></div>
+        <div class="form-group"><label>Unidade Escolar <span class="req">*</span></label><input type="text" class="form-control" id="regSchool" placeholder="Nome da UE"></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:1rem">
         <button class="btn btn-ghost" onclick="showPage('home')">Cancelar</button>
@@ -385,16 +341,16 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
       </div>
     </div>
     <div id="step2" class="card" style="display:none">
-      <div class="card-header"><h2>Seleção de Oficinas</h2><p>Escolha livremente as oficinas. Você não é obrigado a selecionar todas. Vagas limitadas a 35 por oficina.</p></div>
+      <div class="card-header"><h2>Seleção de Oficinas</h2><p>Escolha livremente. Você pode pular horários. Vagas limitadas a 35.</p></div>
       <div id="step2Alert"></div>
       <div id="workshopList"></div>
       <div style="display:flex;justify-content:space-between;gap:12px;margin-top:1.5rem">
         <button class="btn btn-ghost" onclick="goToStep(1)">← Voltar</button>
-        <button class="btn btn-primary" onclick="goToStep(3)">Revisar Inscrição →</button>
+        <button class="btn btn-primary" onclick="goToStep(3)">Revisar →</button>
       </div>
     </div>
     <div id="step3" class="card" style="display:none">
-      <div class="card-header"><h2>Revisão e Confirmação</h2><p>Verifique os dados antes de confirmar sua inscrição</p></div>
+      <div class="card-header"><h2>Revisão e Confirmação</h2><p>Verifique antes de confirmar</p></div>
       <div id="confirmContent"></div>
       <div style="display:flex;justify-content:space-between;gap:12px;margin-top:1.5rem">
         <button class="btn btn-ghost" onclick="goToStep(2)">← Voltar</button>
@@ -402,46 +358,44 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
       </div>
     </div>
     <div id="step4" style="display:none">
-      <div style="text-align:center;margin-bottom:2rem;animation:fadeUp .5s ease">
+      <div style="text-align:center;margin-bottom:2rem">
         <h2 style="color:var(--verde);margin-bottom:.5rem;font-size:1.5rem">Inscrição Realizada!</h2>
-        <p style="color:var(--texto-muted)">Seu cartão de credenciamento foi gerado. Imprima ou salve para apresentar no evento.</p>
+        <p style="color:var(--texto-muted)">Imprima ou salve seu cartão para o evento.</p>
       </div>
       <div id="generatedCard"></div>
       <div style="text-align:center;margin-top:2rem;display:flex;gap:12px;justify-content:center;flex-wrap:wrap" class="no-print">
-        <button class="btn btn-primary" onclick="printCard()">Imprimir Cartão</button>
+        <button class="btn btn-primary" onclick="printCard()">Imprimir</button>
         <button class="btn btn-gold" onclick="startRegistration()">Nova Inscrição</button>
-        <button class="btn btn-ghost" onclick="showPage('home')">Voltar ao Início</button>
+        <button class="btn btn-ghost" onclick="showPage('home')">Início</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- CONSULT -->
 <div id="page-consult" class="page">
   <div class="main-wrap">
     <div class="card">
-      <div class="card-header"><h2>Consultar Inscrição</h2><p>Busque por nome, CPF ou número de inscrição</p></div>
-      <div class="search-box"><span class="search-icon">&#128269;</span><input type="text" id="searchInput" placeholder="Digite para buscar..." oninput="searchRegistrations()"></div>
+      <div class="card-header"><h2>Consultar Inscrição</h2><p>Busque por nome, CPF ou número</p></div>
+      <div class="search-box"><span class="search-icon">&#128269;</span><input type="text" id="searchInput" placeholder="Buscar..." oninput="searchRegistrations()"></div>
       <div id="searchResults"></div>
       <div id="viewCard" style="display:none;margin-top:2rem">
-        <div style="text-align:center;margin-bottom:1rem" class="no-print"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('viewCard').style.display='none';document.getElementById('searchResults').innerHTML=''">← Voltar aos resultados</button></div>
+        <div style="text-align:center;margin-bottom:1rem" class="no-print"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('viewCard').style.display='none';document.getElementById('searchResults').innerHTML=''">← Voltar</button></div>
         <div id="viewCardInner"></div>
         <div style="text-align:center;margin-top:1.5rem;display:flex;gap:12px;justify-content:center" class="no-print">
-          <button class="btn btn-primary" onclick="printCard()">Imprimir Cartão</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteCurrentReg()">Excluir Inscrição</button>
+          <button class="btn btn-primary" onclick="printCard()">Imprimir</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCurrentReg()">Excluir</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ADMIN -->
 <div id="page-admin" class="page">
   <div class="main-wrap">
     <div id="adminGate" class="pw-gate">
       <div class="pw-icon">&#128274;</div>
       <h3 style="color:#fff;margin-bottom:.5rem;font-size:1.3rem">Acesso Restrito</h3>
-      <p style="color:var(--texto-footer);margin-bottom:1.5rem;font-size:.9rem">Digite a senha de administrador</p>
+      <p style="color:var(--texto-footer);margin-bottom:1.5rem;font-size:.9rem">Senha de administrador</p>
       <div class="form-group"><input type="password" class="form-control" id="adminPw" placeholder="Senha" onkeydown="if(event.key==='Enter')checkAdmin()"></div>
       <div id="adminPwAlert"></div>
       <button class="btn btn-accent" onclick="checkAdmin()" style="margin-top:.5rem">Entrar</button>
@@ -449,19 +403,19 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
     <div id="adminPanel" style="display:none">
       <div class="card" style="margin-bottom:1.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-          <div><h2 style="color:var(--azul-escuro);font-size:1.3rem">Painel Administrativo</h2><p style="color:var(--texto-muted);font-size:.85rem;margin-top:2px">Gestão de inscrições &middot; Dados sincronizados em tempo real</p></div>
+          <div><h2 style="color:var(--azul-escuro);font-size:1.3rem">Painel Administrativo</h2><p style="color:var(--texto-muted);font-size:.85rem;margin-top:2px">Dados sincronizados em tempo real</p></div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-primary btn-sm" onclick="exportCSV()">Exportar CSV</button>
-            <button class="btn btn-danger btn-sm" onclick="clearAll()">Limpar Tudo</button>
+            <button class="btn btn-primary btn-sm" onclick="exportCSV()">CSV</button>
+            <button class="btn btn-danger btn-sm" onclick="clearAll()">Limpar</button>
           </div>
         </div>
       </div>
       <div id="adminStats" class="admin-stats"></div>
       <div class="card">
         <div class="tabs" id="adminTabs">
-          <button class="tab-btn active" onclick="showAdminTab('capacidade')">Capacidade</button>
-          <button class="tab-btn" onclick="showAdminTab('inscritos')">Inscritos</button>
-          <button class="tab-btn" onclick="showAdminTab('por-dia')">Por Dia</button>
+          <button class="tab-btn active" onclick="showAdminTab('capacidade',this)">Capacidade</button>
+          <button class="tab-btn" onclick="showAdminTab('inscritos',this)">Inscritos</button>
+          <button class="tab-btn" onclick="showAdminTab('por-dia',this)">Por Dia</button>
         </div>
         <div id="tab-capacidade" class="tab-content active"></div>
         <div id="tab-inscritos" class="tab-content"></div>
@@ -475,189 +429,200 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 <div class="confetti-container" id="confettiBox"></div>
 
 <script>
-// ====================================================================
-// CONFIGURAÇÃO DO FIREBASE
+// ======================================================================
+// 🔧 CONFIGURAÇÃO DO FIREBASE — COLE SUAS CREDENCIAIS AQUI
+// ======================================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDPFRi_u2bC3esst_3zO_FpMEP-YiPwjMg",
-  authDomain: "diasparaosaebcaieiras.firebaseapp.com",
-  projectId: "diasparaosaebcaieiras",
-  storageBucket: "diasparaosaebcaieiras.firebasestorage.app",
-  messagingSenderId: "102817639006",
-  appId: "1:102817639006:web:588ab04a9db5385b98a2cf",
-  measurementId: "G-WWHSTPS7LD"
+  apiKey: "SUA_API_KEY_AQUI",
+  authDomain: "seu-projeto.firebaseapp.com",
+  projectId: "seu-projeto",
+  storageBucket: "seu-projeto.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:xxxxxxxxxxxx"
 };
 
+// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const COLLECTION = 'registrations';
 
-// ====================================================================
+// ======================================================================
 // APP CONFIG
-// ====================================================================
-const CONFIG = { month:'Junho', year:2026, maxPerWorkshop:35, adminPassword:'adminOPcai2026' };
+// ======================================================================
+const CONFIG = { month:'Junho', year:2025, maxPerWorkshop:35, adminPassword:'admin2025' };
 
-// ====================================================================
-// SCHEDULE DATA
-// ====================================================================
+// ======================================================================
+// SCHEDULE
+// ======================================================================
 const SCHEDULE = {
-  diretor: {
-    sessions: [
-      { id:'d15m', date:15, period:'Manhã', theme:'Pauta dos Supervisores', audience:'Diretores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Pauta dos Supervisores — Sessão obrigatória' },
-      { id:'d15t', date:15, period:'Tarde', theme:'Oficinas', audience:'Diretores das 67 UEs', duration:'4 horas', fixed:false, workshops:[
-        { id:'dados', name:'DADOS' },{ id:'matricula', name:'MATRÍCULA' },{ id:'financeiro', name:'FINANCEIRO / COMPRAS' },{ id:'aposentadoria', name:'APOSENTADORIA' },{ id:'obras', name:'OBRAS / PATRIMÔNIO' }
-      ]},
-      { id:'d18t', date:18, period:'Tarde', theme:'Encerramento / Premiação', audience:'Diretores & Coordenadores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Professor Nota 10 — Encerramento e premiação' }
-    ]
-  },
-  coordenador: {
-    sessions: [
-      { id:'c16m', date:16, period:'Manhã', theme:'Oficinas', audience:'Coordenadores das 67 UEs', duration:'4 horas', fixed:false, workshops:[
-        { id:'dados', name:'DADOS' },{ id:'agenda_gestao', name:'AGENDA GESTÃO' }
-      ]},
-      { id:'c18t', date:18, period:'Tarde', theme:'Encerramento / Premiação', audience:'Diretores & Coordenadores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Professor Nota 10 — Encerramento e premiação' }
-    ]
-  },
-  professor: {
-    sessions: [
-      { id:'p16t', date:16, period:'Tarde', theme:'Plenária Destinada aos Professores', audience:'Professores Segmentados por Grupos', duration:'4 horas', fixed:true, fixedLabel:'Plenária Destinada aos Professores — Sessão obrigatória' },
-      { id:'p17m', date:17, period:'Manhã', theme:'Oficinas por Dentro do Currículo', audience:'Professores Segmentados por Grupos', duration:'4 horas', fixed:false, workshops:[
-        { id:'lp', name:'LP — Língua Portuguesa' },{ id:'mt', name:'MT — Matemática' },{ id:'cnt', name:'CNT — Ciências da Natureza' },{ id:'chs', name:'CHS — Ciências Humanas' },{ id:'linguagens', name:'LINGUAGENS' }
-      ]},
-      { id:'p17t', date:17, period:'Tarde', theme:'Oficinas por Dentro do Currículo', audience:'Professores Segmentados por Grupos', duration:'4 horas', fixed:false, workshops:[
-        { id:'lp', name:'LP — Língua Portuguesa' },{ id:'mt', name:'MT — Matemática' },{ id:'cnt', name:'CNT — Ciências da Natureza' },{ id:'chs', name:'CHS — Ciências Humanas' },{ id:'linguagens', name:'LINGUAGENS' }
-      ]},
-      { id:'p18m', date:18, period:'Manhã', theme:'Oficinas por Dentro do Currículo', audience:'Professores Segmentados por Grupos', duration:'4 horas', fixed:false, workshops:[
-        { id:'lp', name:'LP — Língua Portuguesa' },{ id:'mt', name:'MT — Matemática' },{ id:'cnt', name:'CNT — Ciências da Natureza' },{ id:'chs', name:'CHS — Ciências Humanas' },{ id:'linguagens', name:'LINGUAGENS' }
-      ]}
-    ]
-  }
+  diretor:{sessions:[
+    {id:'d15m',date:15,period:'Manhã',theme:'Pauta dos Supervisores',audience:'Diretores das 67 UEs',fixed:true,fixedLabel:'Pauta dos Supervisores — Sessão obrigatória'},
+    {id:'d15t',date:15,period:'Tarde',theme:'Oficinas',audience:'Diretores das 67 UEs',fixed:false,workshops:[
+      {id:'dados',name:'DADOS'},{id:'matricula',name:'MATRÍCULA'},{id:'financeiro',name:'FINANCEIRO / COMPRAS'},{id:'aposentadoria',name:'APOSENTADORIA'},{id:'obras',name:'OBRAS / PATRIMÔNIO'}
+    ]},
+    {id:'d18t',date:18,period:'Tarde',theme:'Encerramento',audience:'Diretores & Coordenadores',fixed:true,fixedLabel:'Professor Nota 10 — Encerramento e premiação'}
+  ]},
+  coordenador:{sessions:[
+    {id:'c16m',date:16,period:'Manhã',theme:'Oficinas',audience:'Coordenadores das 67 UEs',fixed:false,workshops:[
+      {id:'dados',name:'DADOS'},{id:'agenda_gestao',name:'AGENDA GESTÃO'}
+    ]},
+    {id:'c18t',date:18,period:'Tarde',theme:'Encerramento',audience:'Diretores & Coordenadores',fixed:true,fixedLabel:'Professor Nota 10 — Encerramento e premiação'}
+  ]},
+  professor:{sessions:[
+    {id:'p16t',date:16,period:'Tarde',theme:'Plenária Professores',audience:'Professores',fixed:true,fixedLabel:'Plenária Destinada aos Professores — Sessão obrigatória'},
+    {id:'p17m',date:17,period:'Manhã',theme:'Oficinas por Dentro do Currículo',audience:'Professores',fixed:false,workshops:[
+      {id:'lp',name:'LP — Língua Portuguesa'},{id:'mt',name:'MT — Matemática'},{id:'cnt',name:'CNT — Ciências da Natureza'},{id:'chs',name:'CHS — Ciências Humanas'},{id:'linguagens',name:'LINGUAGENS'}
+    ]},
+    {id:'p17t',date:17,period:'Tarde',theme:'Oficinas por Dentro do Currículo',audience:'Professores',fixed:false,workshops:[
+      {id:'lp',name:'LP — Língua Portuguesa'},{id:'mt',name:'MT — Matemática'},{id:'cnt',name:'CNT — Ciências da Natureza'},{id:'chs',name:'CHS — Ciências Humanas'},{id:'linguagens',name:'LINGUAGENS'}
+    ]},
+    {id:'p18m',date:18,period:'Manhã',theme:'Oficinas por Dentro do Currículo',audience:'Professores',fixed:false,workshops:[
+      {id:'lp',name:'LP — Língua Portuguesa'},{id:'mt',name:'MT — Matemática'},{id:'cnt',name:'CNT — Ciências da Natureza'},{id:'chs',name:'CHS — Ciências Humanas'},{id:'linguagens',name:'LINGUAGENS'}
+    ]}
+  ]}
 };
 
-// ====================================================================
-// DATA STORE (FIREBASE + LOCAL CACHE)
-// ====================================================================
+// ======================================================================
+// DATA STORE (FIREBASE)
+// ======================================================================
 let localCache = [];
 let firestoreReady = false;
-let counterRef = db.collection('meta').doc('counter');
+let currentUser = null;
 
 const Store = {
-  getAll() { return localCache; },
+  getAll(){ return localCache; },
 
-  async add(reg) {
-    const counterDoc = await counterRef.get();
+  async add(reg){
+    const counterRef = db.collection('meta').doc('counter');
     let num = 1;
-    if (counterDoc.exists) {
-      num = (counterDoc.data().lastNum || 0) + 1;
-    }
-    reg.id = 'OP' + CONFIG.year + String(num).padStart(4, '0');
+    try {
+      const doc = await counterRef.get();
+      if(doc.exists) num = (doc.data().lastNum || 0) + 1;
+    } catch(e){ console.warn('Counter read error, using 1'); }
+    reg.id = 'OP' + CONFIG.year + String(num).padStart(4,'0');
     reg.createdAt = firebase.firestore.FieldValue.serverTimestamp();
     reg.num = num;
-
     await db.collection(COLLECTION).doc(reg.id).set(reg);
     await counterRef.set({ lastNum: num });
-
     return reg;
   },
 
-  async remove(id) {
+  async remove(id){
     await db.collection(COLLECTION).doc(id).delete();
   },
 
-  findByCPF(cpf) {
-    return localCache.find(r => r.cpf === cpf);
-  },
+  findByCPF(cpf){ return localCache.find(r => r.cpf === cpf); },
+  findById(id){ return localCache.find(r => r.id === id); },
+  getWorkshopCount(sid,wid){ return localCache.filter(r => r.selections && r.selections[sid] === wid).length; },
 
-  findById(id) {
-    return localCache.find(r => r.id === id);
-  },
-
-  getWorkshopCount(sid, wid) {
-    return localCache.filter(r => r.selections && r.selections[sid] === wid).length;
-  },
-
-  async clearAll() {
-    const batch = db.batch();
+  async clearAll(){
     const snapshot = await db.collection(COLLECTION).get();
+    const batch = db.batch();
     snapshot.docs.forEach(doc => batch.delete(doc.ref));
-    await batch.delete(counterRef);
+    batch.delete(db.collection('meta').doc('counter'));
     await batch.commit();
   }
 };
 
-// Real-time listener
-function initFirestoreListener() {
-  const syncDot = document.querySelector('.sync-dot');
-  const syncText = document.getElementById('syncStatus');
+// ======================================================================
+// INICIALIZAÇÃO: Auth anônimo → Listener Firestore
+// ======================================================================
+function updateSyncUI(state, text){
+  const dot = document.querySelector('.sync-dot');
+  const label = document.getElementById('syncStatus');
+  dot.className = 'sync-dot ' + state;
+  label.innerHTML = '<span class="sync-dot ' + state + '"></span> ' + text;
+}
 
-  db.collection(COLLECTION).orderBy('num', 'asc').onSnapshot(
+function startFirestoreListener(){
+  db.collection(COLLECTION).orderBy('num','asc').onSnapshot(
     (snapshot) => {
-      localCache = snapshot.docs.map(doc => ({ ...doc.data(), _docId: doc.id }));
+      localCache = snapshot.docs.map(d => ({...d.data(), _docId: d.id}));
       firestoreReady = true;
-      syncDot.className = 'sync-dot online';
-      syncText.innerHTML = '<span class="sync-dot online"></span> Online · ' + localCache.length + ' inscrições';
+      updateSyncUI('online', 'Online · ' + localCache.length + ' inscrições');
       updateHomeStats();
-      // Refresh admin if open
-      if (currentPage === 'admin' && adminAuthenticated) renderAdmin();
+      if(currentPage === 'admin' && adminAuthenticated) renderAdmin();
     },
     (error) => {
-      console.error('Firestore error:', error);
-      syncDot.className = 'sync-dot offline';
-      syncText.innerHTML = '<span class="sync-dot offline"></span> Offline';
-      showToast('Erro de conexão com o servidor', 'error');
+      console.error('Listener error:', error);
+      updateSyncUI('offline', 'Erro de conexão');
+      showToast('Erro de conexão com Firestore', 'error');
     }
   );
 }
 
-// ====================================================================
-// TOAST
-// ====================================================================
-function showToast(msg, type = 'info') {
+function initFirebase(){
+  updateSyncUI('loading', 'Autenticando...');
+
+  auth.signInAnonymously()
+    .then((credential) => {
+      currentUser = credential.user;
+      console.log('Auth OK:', currentUser.uid);
+      updateSyncUI('online', 'Conectado');
+      startFirestoreListener();
+    })
+    .catch((error) => {
+      console.error('Auth error:', error.code, error.message);
+      updateSyncUI('offline', 'Falha auth: ' + error.code);
+
+      if(error.code === 'auth/admin-restricted-operation'){
+        showToast('ERRO: Ative a autenticação anônima no Firebase Console → Authentication → Sign-in method → Anônimo', 'error');
+      } else {
+        showToast('Erro de autenticação: ' + error.message, 'error');
+      }
+    });
+}
+
+// ======================================================================
+// TOAST & LOADING
+// ======================================================================
+function showToast(msg, type='info'){
   const box = document.getElementById('toastBox');
   const t = document.createElement('div');
   t.className = 'toast toast-' + type;
-  t.innerHTML = (type === 'success' ? '&#10004; ' : type === 'error' ? '&#10008; ' : '&#9432; ') + msg;
+  const icons = {success:'&#10004;', error:'&#10008;', info:'&#9432;'};
+  t.innerHTML = (icons[type]||'') + ' ' + msg;
   box.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(40px)'; setTimeout(() => t.remove(), 300); }, 3500);
+  setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 300); }, 5000);
 }
 
-function showLoading(show) {
+function showLoading(show){
   let el = document.querySelector('.loading-overlay');
-  if (show && !el) {
+  if(show && !el){
     el = document.createElement('div');
     el.className = 'loading-overlay';
     el.innerHTML = '<div class="spinner"></div>';
     document.body.appendChild(el);
-  } else if (!show && el) {
-    el.remove();
-  }
+  } else if(!show && el) el.remove();
 }
 
-// ====================================================================
+// ======================================================================
 // NAVIGATION
-// ====================================================================
+// ======================================================================
 let currentPage = 'home';
-function showPage(page) {
+function showPage(page){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const el = document.getElementById('page-' + page);
-  if (el) { el.classList.add('active'); el.style.animation = 'none'; el.offsetHeight; el.style.animation = ''; }
+  const el = document.getElementById('page-'+page);
+  if(el){ el.classList.add('active'); el.style.animation='none'; el.offsetHeight; el.style.animation=''; }
   document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
   const nb = document.querySelector(`.nav-links button[data-page="${page}"]`);
-  if (nb) nb.classList.add('active');
+  if(nb) nb.classList.add('active');
   currentPage = page;
   updateHomeStats();
-  if (page === 'admin' && adminAuthenticated) renderAdmin();
+  if(page === 'admin' && adminAuthenticated) renderAdmin();
 }
-function updateHomeStats() { const el = document.getElementById('homeTotal'); if (el) el.textContent = localCache.length; }
+function updateHomeStats(){ const el = document.getElementById('homeTotal'); if(el) el.textContent = localCache.length; }
 
-// ====================================================================
+// ======================================================================
 // REGISTRATION
-// ====================================================================
+// ======================================================================
 let regData = {};
 let skippedSessions = {};
 
-function startRegistration() {
+function startRegistration(){
   regData = {}; skippedSessions = {};
-  ['regName', 'regCPF', 'regEmail', 'regPhone', 'regSchool'].forEach(id => document.getElementById(id).value = '');
+  ['regName','regCPF','regEmail','regPhone','regSchool'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('regRole').value = '';
   document.getElementById('step1Alert').innerHTML = '';
   document.getElementById('step2Alert').innerHTML = '';
@@ -666,345 +631,276 @@ function startRegistration() {
   showPage('register');
 }
 
-function goToStep(step) {
-  if (step === 2 && !validateStep1()) return;
-  if (step === 3 && !validateStep2()) return;
-  [1, 2, 3, 4].forEach(s => { const el = document.getElementById('step' + s); if (el) el.style.display = s === step ? 'block' : 'none'; });
-  document.querySelectorAll('.step-item').forEach((si, i) => { si.classList.remove('active', 'done'); const sn = i + 1; if (sn === step) si.classList.add('active'); else if (sn < step) si.classList.add('done'); });
-  document.querySelectorAll('.step-line').forEach((sl, i) => { sl.classList.toggle('done', i + 1 < step); });
-  if (step === 2) renderWorkshops();
-  if (step === 3) renderConfirmation();
+function goToStep(step){
+  if(step===2 && !validateStep1()) return;
+  [1,2,3,4].forEach(s => { const el = document.getElementById('step'+s); if(el) el.style.display = s===step?'block':'none'; });
+  document.querySelectorAll('.step-item').forEach((si,i) => { si.classList.remove('active','done'); if(i+1===step) si.classList.add('active'); else if(i+1<step) si.classList.add('done'); });
+  document.querySelectorAll('.step-line').forEach((sl,i) => { sl.classList.toggle('done', i+1<step); });
+  if(step===2) renderWorkshops();
+  if(step===3) renderConfirmation();
 }
 
-function validateStep1() {
-  const name = document.getElementById('regName').value.trim();
-  const cpf = document.getElementById('regCPF').value.trim();
-  const role = document.getElementById('regRole').value;
-  const school = document.getElementById('regSchool').value.trim();
-  const alertEl = document.getElementById('step1Alert');
-  alertEl.innerHTML = '';
-  if (!name) { alertEl.innerHTML = '<div class="alert alert-danger">Informe o nome completo.</div>'; return false; }
-  if (!cpf || cpf.replace(/\D/g, '').length < 11) { alertEl.innerHTML = '<div class="alert alert-danger">Informe um CPF válido.</div>'; return false; }
-  if (!role) { alertEl.innerHTML = '<div class="alert alert-danger">Selecione o perfil.</div>'; return false; }
-  if (!school) { alertEl.innerHTML = '<div class="alert alert-danger">Informe a Unidade Escolar.</div>'; return false; }
-  const existing = Store.findByCPF(cpf);
-  if (existing) {
-    alertEl.innerHTML = '<div class="alert alert-warning">Já existe inscrição para este CPF. <a href="#" onclick="event.preventDefault();showPage(\'consult\');document.getElementById(\'searchInput\').value=\'' + cpf + '\';searchRegistrations()" style="color:var(--azul-badge-txt);font-weight:700">Consultar</a> ou continue para atualizar.</div>';
-    regData._existingId = existing.id;
+function validateStep1(){
+  const name=document.getElementById('regName').value.trim();
+  const cpf=document.getElementById('regCPF').value.trim();
+  const role=document.getElementById('regRole').value;
+  const school=document.getElementById('regSchool').value.trim();
+  const alertEl=document.getElementById('step1Alert');
+  alertEl.innerHTML='';
+  if(!name){alertEl.innerHTML='<div class="alert alert-danger">Informe o nome.</div>';return false;}
+  if(!cpf||cpf.replace(/\D/g,'').length<11){alertEl.innerHTML='<div class="alert alert-danger">CPF inválido.</div>';return false;}
+  if(!role){alertEl.innerHTML='<div class="alert alert-danger">Selecione o perfil.</div>';return false;}
+  if(!school){alertEl.innerHTML='<div class="alert alert-danger">Informe a UE.</div>';return false;}
+  const existing=Store.findByCPF(cpf);
+  if(existing){
+    alertEl.innerHTML='<div class="alert alert-warning">CPF já inscrito. <a href="#" onclick="event.preventDefault();showPage(\'consult\');document.getElementById(\'searchInput\').value=\''+cpf+'\';searchRegistrations()" style="color:var(--azul-badge-txt);font-weight:700">Consultar</a></div>';
+    regData._existingId=existing.id;
   }
-  regData.name = name; regData.cpf = cpf; regData.email = document.getElementById('regEmail').value.trim();
-  regData.phone = document.getElementById('regPhone').value.trim(); regData.role = role; regData.school = school; regData.selections = {};
-  skippedSessions = {};
+  regData={name,cpf,email:document.getElementById('regEmail').value.trim(),phone:document.getElementById('regPhone').value.trim(),role,school,selections:{}};
+  skippedSessions={};
   return true;
 }
 
-function renderWorkshops() {
-  const schedule = SCHEDULE[regData.role];
-  if (!schedule) return;
-  const container = document.getElementById('workshopList');
-  container.innerHTML = '';
-  schedule.sessions.forEach(session => {
-    const card = document.createElement('div'); card.className = 'session-card';
-    let html = `<div class="session-header"><div><h3>${session.theme}</h3></div><div class="session-date"><span class="date-badge">${session.date}/${String(CONFIG.month).substring(0, 3)}</span><span class="period-badge">${session.period}</span></div></div><div class="session-audience">👥 ${session.audience}</div>`;
-    if (session.fixed) { html += `<div class="session-fixed">✓ ${session.fixedLabel}</div>`; card.innerHTML = html; container.appendChild(card); return; }
-    html += `<div class="session-optional">ⓘ Esta oficina é opcional — escolha ou pule este horário</div>`;
-    const isSkipped = skippedSessions[session.id] === true;
-    html += `<label class="session-skip ${isSkipped ? 'skip-active' : ''}" onclick="toggleSkip('${session.id}',this)"><input type="checkbox" ${isSkipped ? 'checked' : ''}> Não desejo participar deste horário</label>`;
-    if (session.workshops) {
-      html += `<div class="workshop-options ${isSkipped ? 'dimmed' : ''}" id="wkopts_${session.id}">`;
-      session.workshops.forEach(wk => {
-        const count = Store.getWorkshopCount(session.id, wk.id);
-        const full = count >= CONFIG.maxPerWorkshop;
-        const pct = Math.round((count / CONFIG.maxPerWorkshop) * 100);
-        const barClass = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
-        const isSel = regData.selections[session.id] === wk.id;
-        html += `<label class="workshop-opt ${full ? 'disabled' : ''} ${isSel ? 'selected' : ''}" onclick="${full || isSkipped ? '' : `selectWorkshop('${session.id}','${wk.id}',this)`}"><input type="radio" name="ws_${session.id}" value="${wk.id}" ${isSel ? 'checked' : ''} ${full || isSkipped ? 'disabled' : ''}><div class="wk-name">${wk.name}</div><div class="wk-cap ${full ? 'full' : ''}">${full ? 'LOTADO' : count + '/' + CONFIG.maxPerWorkshop + ' vagas'}</div><div class="cap-bar"><div class="cap-bar-fill ${barClass}" style="width:${pct}%"></div></div></label>`;
+function renderWorkshops(){
+  const schedule=SCHEDULE[regData.role]; if(!schedule)return;
+  const container=document.getElementById('workshopList'); container.innerHTML='';
+  schedule.sessions.forEach(session=>{
+    const card=document.createElement('div'); card.className='session-card';
+    let html=`<div class="session-header"><div><h3>${session.theme}</h3></div><div class="session-date"><span class="date-badge">${session.date}/${CONFIG.month.substring(0,3)}</span><span class="period-badge">${session.period}</span></div></div><div class="session-audience">👥 ${session.audience}</div>`;
+    if(session.fixed){html+=`<div class="session-fixed">✓ ${session.fixedLabel}</div>`;card.innerHTML=html;container.appendChild(card;return;}
+    html+=`<div class="session-optional">ⓘ Opcional — escolha ou pule</div>`;
+    const sk=skippedSessions[session.id]===true;
+    html+=`<label class="session-skip ${sk?'skip-active':''}" onclick="toggleSkip('${session.id}',this)"><input type="checkbox" ${sk?'checked':''}> Não desejo participar deste horário</label>`;
+    if(session.workshops){
+      html+=`<div class="workshop-options ${sk?'dimmed':''}" id="wkopts_${session.id}">`;
+      session.workshops.forEach(wk=>{
+        const count=Store.getWorkshopCount(session.id,wk.id);
+        const full=count>=CONFIG.maxPerWorkshop;
+        const pct=Math.round((count/CONFIG.maxPerWorkshop)*100);
+        const bc=pct>=80?'high':pct>=50?'mid':'low';
+        const isSel=regData.selections[session.id]===wk.id;
+        html+=`<label class="workshop-opt ${full?'disabled':''} ${isSel?'selected':''}" onclick="${full||sk?'':`selWk('${session.id}','${wk.id}',this)`}"><input type="radio" name="ws_${session.id}" ${isSel?'checked':''} ${full||sk?'disabled':''}><div class="wk-name">${wk.name}</div><div class="wk-cap ${full?'full':''}">${full?'LOTADO':count+'/'+CONFIG.maxPerWorkshop+' vagas'}</div><div class="cap-bar"><div class="cap-bar-fill ${bc}" style="width:${pct}%"></div></div></label>`;
       });
-      html += '</div>';
+      html+='</div>';
     }
-    card.innerHTML = html; container.appendChild(card);
+    card.innerHTML=html; container.appendChild(card);
   });
 }
 
-function toggleSkip(sessionId, el) {
-  const cb = el.querySelector('input');
-  skippedSessions[sessionId] = cb.checked;
-  el.classList.toggle('skip-active', cb.checked);
-  const opts = document.getElementById('wkopts_' + sessionId);
-  if (opts) opts.classList.toggle('dimmed', cb.checked);
-  if (cb.checked) {
-    delete regData.selections[sessionId];
-    if (opts) opts.querySelectorAll('.workshop-opt').forEach(o => { o.classList.remove('selected'); o.querySelector('input').checked = false; });
+function toggleSkip(sid,el){
+  const cb=el.querySelector('input');
+  skippedSessions[sid]=cb.checked;
+  el.classList.toggle('skip-active',cb.checked);
+  const opts=document.getElementById('wkopts_'+sid);
+  if(opts)opts.classList.toggle('dimmed',cb.checked);
+  if(cb.checked){
+    delete regData.selections[sid];
+    if(opts)opts.querySelectorAll('.workshop-opt').forEach(o=>{o.classList.remove('selected');o.querySelector('input').checked=false;});
   }
 }
 
-function selectWorkshop(sid, wid, el) {
-  regData.selections[sid] = wid;
-  const p = el.closest('.workshop-options');
-  p.querySelectorAll('.workshop-opt').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected'); el.querySelector('input').checked = true;
+function selWk(sid,wid,el){
+  regData.selections[sid]=wid;
+  el.closest('.workshop-options').querySelectorAll('.workshop-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected'); el.querySelector('input').checked=true;
 }
 
-function validateStep2() { return true; }
-
-function renderConfirmation() {
-  const schedule = SCHEDULE[regData.role];
-  const roleLabels = { diretor: 'Diretor(a)', coordenador: 'Coordenador(a)', professor: 'Professor(a)' };
-  let html = `<div class="confirm-box"><h4>Dados Pessoais</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.9rem"><div><b>Nome:</b> ${regData.name}</div><div><b>CPF:</b> ${regData.cpf}</div><div><b>Perfil:</b> ${roleLabels[regData.role]}</div><div><b>Escola:</b> ${regData.school}</div>${regData.email ? `<div><b>E-mail:</b> ${regData.email}</div>` : ''}${regData.phone ? `<div><b>Telefone:</b> ${regData.phone}</div>` : ''}</div></div>`;
-  html += `<div class="confirm-box"><h4>Atividades Selecionadas</h4><table class="admin-table" style="font-size:.85rem"><thead><tr><th>Data</th><th>Período</th><th>Atividade</th><th>Status</th></tr></thead><tbody>`;
-  schedule.sessions.forEach(session => {
-    if (session.fixed) { html += `<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${session.fixedLabel}</td><td><span class="badge badge-success">FIXA</span></td></tr>`; }
-    else {
-      const sel = session.workshops.find(w => w.id === regData.selections[session.id]);
-      if (sel) { html += `<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${sel.name}</td><td><span class="badge badge-info">SELECIONADA</span></td></tr>`; }
-      else { html += `<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${session.theme}</td><td><span class="badge badge-warning">NÃO SELECIONADA</span></td></tr>`; }
+function renderConfirmation(){
+  const schedule=SCHEDULE[regData.role];
+  const rl={diretor:'Diretor(a)',coordenador:'Coordenador(a)',professor:'Professor(a)'};
+  let html=`<div class="confirm-box"><h4>Dados</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.9rem"><div><b>Nome:</b> ${regData.name}</div><div><b>CPF:</b> ${regData.cpf}</div><div><b>Perfil:</b> ${rl[regData.role]}</div><div><b>Escola:</b> ${regData.school}</div></div></div>`;
+  html+=`<div class="confirm-box"><h4>Atividades</h4><table class="admin-table" style="font-size:.85rem"><thead><tr><th>Data</th><th>Período</th><th>Atividade</th><th>Status</th></tr></thead><tbody>`;
+  schedule.sessions.forEach(s=>{
+    if(s.fixed) html+=`<tr><td><b>${s.date}/${CONFIG.month}</b></td><td>${s.period}</td><td>${s.fixedLabel}</td><td><span class="badge badge-success">FIXA</span></td></tr>`;
+    else{
+      const sel=s.workshops.find(w=>w.id===regData.selections[s.id]);
+      if(sel) html+=`<tr><td><b>${s.date}/${CONFIG.month}</b></td><td>${s.period}</td><td>${sel.name}</td><td><span class="badge badge-info">SELECIONADA</span></td></tr>`;
+      else html+=`<tr><td><b>${s.date}/${CONFIG.month}</b></td><td>${s.period}</td><td>${s.theme}</td><td><span class="badge badge-warning">NÃO SELECIONADA</span></td></tr>`;
     }
   });
-  html += '</tbody></table></div>';
-  document.getElementById('confirmContent').innerHTML = html;
+  html+='</tbody></table></div>';
+  document.getElementById('confirmContent').innerHTML=html;
 }
 
-async function confirmRegistration() {
-  const btn = document.getElementById('btnConfirm');
-  btn.disabled = true; btn.textContent = 'Salvando...';
+async function confirmRegistration(){
+  const btn=document.getElementById('btnConfirm');
+  btn.disabled=true; btn.textContent='Salvando...';
   showLoading(true);
-
-  try {
-    if (regData._existingId) await Store.remove(regData._existingId);
-    const saved = await Store.add({
-      name: regData.name, cpf: regData.cpf, email: regData.email,
-      phone: regData.phone, role: regData.role, school: regData.school,
-      selections: { ...regData.selections }
-    });
-    [1, 2, 3].forEach(s => document.getElementById('step' + s).style.display = 'none');
-    document.getElementById('step4').style.display = 'block';
-    document.getElementById('stepsBar').style.display = 'none';
-    renderCard(saved, 'generatedCard');
+  try{
+    if(regData._existingId) await Store.remove(regData._existingId);
+    const saved=await Store.add({name:regData.name,cpf:regData.cpf,email:regData.email,phone:regData.phone,role:regData.role,school:regData.school,selections:{...regData.selections}});
+    [1,2,3].forEach(s=>document.getElementById('step'+s).style.display='none');
+    document.getElementById('step4').style.display='block';
+    document.getElementById('stepsBar').style.display='none';
+    renderCard(saved,'generatedCard');
     showConfetti();
-    showToast('Inscrição salva com sucesso!', 'success');
-  } catch (err) {
+    showToast('Inscrição salva!','success');
+  }catch(err){
     console.error(err);
-    showToast('Erro ao salvar. Tente novamente.', 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Confirmar Inscrição';
+    showToast('Erro ao salvar: '+err.message,'error');
+  }finally{
+    btn.disabled=false; btn.textContent='Confirmar Inscrição';
     showLoading(false);
   }
 }
 
-// ====================================================================
+// ======================================================================
 // CARD
-// ====================================================================
-function renderCard(reg, cid) {
-  const schedule = SCHEDULE[reg.role];
-  const roleLabels = { diretor: 'Diretor(a)', coordenador: 'Coordenador(a)', professor: 'Professor(a)' };
-  if (!schedule) return;
-  let rows = '';
-  schedule.sessions.forEach(session => {
-    if (session.fixed) { rows += `<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td><em style="color:var(--verde)">${session.fixedLabel}</em></td></tr>`; }
-    else {
-      const sel = session.workshops.find(w => w.id === (reg.selections || {})[session.id]);
-      if (sel) { rows += `<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td><b>${sel.name}</b></td></tr>`; }
-      else { rows += `<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td style="color:var(--texto-suave);font-style:italic">Não selecionada</td></tr>`; }
+// ======================================================================
+function renderCard(reg,cid){
+  const schedule=SCHEDULE[reg.role]; if(!schedule)return;
+  const rl={diretor:'Diretor(a)',coordenador:'Coordenador(a)',professor:'Professor(a)'};
+  let rows='';
+  schedule.sessions.forEach(s=>{
+    if(s.fixed) rows+=`<tr><td><b>${s.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${s.period}</td><td>${s.theme}</td><td><em style="color:var(--verde)">${s.fixedLabel}</em></td></tr>`;
+    else{
+      const sel=s.workshops.find(w=>w.id===(reg.selections||{})[s.id]);
+      if(sel) rows+=`<tr><td><b>${s.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${s.period}</td><td>${s.theme}</td><td><b>${sel.name}</b></td></tr>`;
+      else rows+=`<tr><td><b>${s.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${s.period}</td><td>${s.theme}</td><td style="color:var(--texto-suave);font-style:italic">Não selecionada</td></tr>`;
     }
   });
-  document.getElementById(cid).innerHTML = `
-    <div class="card-preview" id="printableCard">
-      <div class="card-preview-header">
-        <img class="card-logo" src="https://i.ibb.co/0p01LzxB/logo3de.jpg" alt="SEDUC">
-        <h3>OFICINAS PEDAGÓGICAS ${CONFIG.year}</h3>
-        <div class="ev-name">Cartão de Credenciamento &middot; URE Caieiras</div>
-      </div>
-      <div class="card-preview-body">
-        <div class="card-participant-info">
-          <div class="info-item"><div class="info-label">Inscrição</div><div class="info-value card-id">${reg.id}</div></div>
-          <div class="info-item"><div class="info-label">Nome</div><div class="info-value">${reg.name}</div></div>
-          <div class="info-item"><div class="info-label">CPF</div><div class="info-value">${reg.cpf}</div></div>
-          <div class="info-item"><div class="info-label">Perfil</div><div class="info-value">${roleLabels[reg.role]}</div></div>
-          <div class="info-item"><div class="info-label">Escola</div><div class="info-value">${reg.school}</div></div>
-          ${reg.email ? `<div class="info-item"><div class="info-label">E-mail</div><div class="info-value">${reg.email}</div></div>` : ''}
-        </div>
-        <table class="card-schedule"><thead><tr><th>Data</th><th>Período</th><th>Atividade</th><th>Oficina</th></tr></thead><tbody>${rows}</tbody></table>
-      </div>
-      <div class="card-footer">Apresente este cartão no credenciamento &middot; ${CONFIG.month} ${CONFIG.year} &middot; URE Caieiras</div>
-    </div>`;
+  document.getElementById(cid).innerHTML=`<div class="card-preview" id="printableCard"><div class="card-preview-header"><img class="card-logo" src="https://i.ibb.co/0p01LzxB/logo3de.jpg" alt="SEDUC"><h3>OFICINAS PEDAGÓGICAS ${CONFIG.year}</h3><div class="ev-name">Cartão de Credenciamento · URE Caieiras</div></div><div class="card-preview-body"><div class="card-participant-info"><div class="info-item"><div class="info-label">Inscrição</div><div class="info-value card-id">${reg.id}</div></div><div class="info-item"><div class="info-label">Nome</div><div class="info-value">${reg.name}</div></div><div class="info-item"><div class="info-label">CPF</div><div class="info-value">${reg.cpf}</div></div><div class="info-item"><div class="info-label">Perfil</div><div class="info-value">${rl[reg.role]}</div></div><div class="info-item"><div class="info-label">Escola</div><div class="info-value">${reg.school}</div></div>${reg.email?`<div class="info-item"><div class="info-label">E-mail</div><div class="info-value">${reg.email}</div></div>`:''}</div><table class="card-schedule"><thead><tr><th>Data</th><th>Período</th><th>Atividade</th><th>Oficina</th></tr></thead><tbody>${rows}</tbody></table></div><div class="card-footer">Apresente no credenciamento · ${CONFIG.month} ${CONFIG.year} · URE Caieiras</div></div>`;
 }
 
-function printCard() {
-  const card = document.getElementById('printableCard'); if (!card) return;
-  document.getElementById('page-print').innerHTML = card.outerHTML;
-  window.print();
-}
+function printCard(){const card=document.getElementById('printableCard');if(!card)return;document.getElementById('page-print').innerHTML=card.outerHTML;window.print();}
 
-// ====================================================================
+// ======================================================================
 // SEARCH
-// ====================================================================
-let currentViewingReg = null;
-function searchRegistrations() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  const container = document.getElementById('searchResults');
-  document.getElementById('viewCard').style.display = 'none';
-  if (!q) { container.innerHTML = ''; return; }
-  const results = localCache.filter(r => r.name.toLowerCase().includes(q) || r.cpf.includes(q) || r.id.toLowerCase().includes(q));
-  const roleLabels = { diretor: 'Diretor(a)', coordenador: 'Coordenador(a)', professor: 'Professor(a)' };
-  if (!results.length) { container.innerHTML = '<div class="alert alert-info">Nenhuma inscrição encontrada.</div>'; return; }
-  container.innerHTML = results.map(r => `<div class="result-card" onclick="viewRegistration('${r.id}')"><div class="result-info"><h4>${r.name}</h4><p>${r.cpf} · ${r.school} · <span class="badge-role">${roleLabels[r.role]}</span></p></div><div><span class="badge badge-info">${r.id}</span></div></div>`).join('');
+// ======================================================================
+let currentViewingReg=null;
+function searchRegistrations(){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const c=document.getElementById('searchResults');
+  document.getElementById('viewCard').style.display='none';
+  if(!q){c.innerHTML='';return;}
+  const results=localCache.filter(r=>r.name.toLowerCase().includes(q)||r.cpf.includes(q)||r.id.toLowerCase().includes(q));
+  const rl={diretor:'Diretor(a)',coordenador:'Coordenador(a)',professor:'Professor(a)'};
+  if(!results.length){c.innerHTML='<div class="alert alert-info">Nenhuma inscrição encontrada.</div>';return;}
+  c.innerHTML=results.map(r=>`<div class="result-card" onclick="viewReg('${r.id}')"><div class="result-info"><h4>${r.name}</h4><p>${r.cpf} · ${r.school} · <span class="badge-role">${rl[r.role]}</span></p></div><div><span class="badge badge-info">${r.id}</span></div></div>`).join('');
 }
 
-function viewRegistration(id) {
-  const reg = Store.findById(id); if (!reg) return;
-  currentViewingReg = reg;
-  document.getElementById('searchResults').innerHTML = '';
-  document.getElementById('viewCard').style.display = 'block';
-  renderCard(reg, 'viewCardInner');
+function viewReg(id){
+  const reg=Store.findById(id);if(!reg)return;
+  currentViewingReg=reg;
+  document.getElementById('searchResults').innerHTML='';
+  document.getElementById('viewCard').style.display='block';
+  renderCard(reg,'viewCardInner');
 }
 
-async function deleteCurrentReg() {
-  if (!currentViewingReg) return;
-  if (!confirm('Excluir inscrição de ' + currentViewingReg.name + '?')) return;
+async function deleteCurrentReg(){
+  if(!currentViewingReg)return;
+  if(!confirm('Excluir inscrição de '+currentViewingReg.name+'?'))return;
   showLoading(true);
-  try {
-    await Store.remove(currentViewingReg.id);
-    currentViewingReg = null;
-    document.getElementById('viewCard').style.display = 'none';
-    document.getElementById('searchInput').value = '';
-    searchRegistrations();
-    showToast('Inscrição excluída', 'success');
-  } catch (err) {
-    showToast('Erro ao excluir', 'error');
-  } finally {
-    showLoading(false);
-  }
+  try{await Store.remove(currentViewingReg.id);currentViewingReg=null;document.getElementById('viewCard').style.display='none';document.getElementById('searchInput').value='';searchRegistrations();showToast('Excluída','success');}
+  catch(e){showToast('Erro ao excluir','error');}
+  finally{showLoading(false);}
 }
 
-// ====================================================================
+// ======================================================================
 // ADMIN
-// ====================================================================
-let adminAuthenticated = false;
-function checkAdmin() {
-  const pw = document.getElementById('adminPw').value;
-  if (pw === CONFIG.adminPassword) {
-    adminAuthenticated = true;
-    document.getElementById('adminGate').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
+// ======================================================================
+let adminAuthenticated=false;
+function checkAdmin(){
+  if(document.getElementById('adminPw').value===CONFIG.adminPassword){
+    adminAuthenticated=true;
+    document.getElementById('adminGate').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
     renderAdmin();
-  } else {
-    document.getElementById('adminPwAlert').innerHTML = '<div class="alert alert-danger" style="margin-top:.5rem">Senha incorreta.</div>';
-  }
+  }else document.getElementById('adminPwAlert').innerHTML='<div class="alert alert-danger" style="margin-top:.5rem">Senha incorreta.</div>';
 }
 
-function renderAdmin() {
-  const all = localCache;
-  const roleLabels = { diretor: 'Diretores', coordenador: 'Coordenadores', professor: 'Professores' };
-  const byRole = { diretor: 0, coordenador: 0, professor: 0 };
-  all.forEach(r => byRole[r.role] = (byRole[r.role] || 0) + 1);
+function renderAdmin(){
+  const all=localCache;
+  const rl={diretor:'Diretores',coordenador:'Coordenadores',professor:'Professores'};
+  const byRole={diretor:0,coordenador:0,professor:0};
+  all.forEach(r=>byRole[r.role]=(byRole[r.role]||0)+1);
+  document.getElementById('adminStats').innerHTML=`<div class="stat-card"><div class="stat-value">${all.length}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-value">${byRole.diretor}</div><div class="stat-label">Diretores</div></div><div class="stat-card"><div class="stat-value">${byRole.coordenador}</div><div class="stat-label">Coordenadores</div></div><div class="stat-card"><div class="stat-value">${byRole.professor}</div><div class="stat-label">Professores</div></div>`;
 
-  document.getElementById('adminStats').innerHTML = `
-    <div class="stat-card"><div class="stat-value">${all.length}</div><div class="stat-label">Total Inscritos</div></div>
-    <div class="stat-card"><div class="stat-value">${byRole.diretor}</div><div class="stat-label">Diretores</div></div>
-    <div class="stat-card"><div class="stat-value">${byRole.coordenador}</div><div class="stat-label">Coordenadores</div></div>
-    <div class="stat-card"><div class="stat-value">${byRole.professor}</div><div class="stat-label">Professores</div></div>`;
-
-  let capHtml = '';
-  Object.entries(SCHEDULE).forEach(([role, data]) => {
-    data.sessions.filter(s => !s.fixed).forEach(session => {
-      session.workshops.forEach(wk => {
-        const count = Store.getWorkshopCount(session.id, wk.id);
-        const pct = Math.round((count / CONFIG.maxPerWorkshop) * 100);
-        const rem = CONFIG.maxPerWorkshop - count;
-        const bc = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
-        const badge = rem === 0 ? 'badge-danger' : rem <= 5 ? 'badge-warning' : 'badge-success';
-        capHtml += `<tr><td><span class="badge-role">${roleLabels[role]}</span></td><td>${session.date}/${CONFIG.month}</td><td>${session.period}</td><td><b>${wk.name}</b></td><td>${count}/${CONFIG.maxPerWorkshop}</td><td><span class="badge ${badge}">${rem === 0 ? 'LOTADO' : rem + ' vagas'}</span></td><td><div class="cap-bar" style="width:100px"><div class="cap-bar-fill ${bc}" style="width:${pct}%"></div></div></td></tr>`;
+  let cap='';
+  Object.entries(SCHEDULE).forEach(([role,data])=>{
+    data.sessions.filter(s=>!s.fixed).forEach(s=>{
+      s.workshops.forEach(wk=>{
+        const count=Store.getWorkshopCount(s.id,wk.id);
+        const pct=Math.round((count/CONFIG.maxPerWorkshop)*100);
+        const rem=CONFIG.maxPerWorkshop-count;
+        const bc=pct>=80?'high':pct>=50?'mid':'low';
+        const b=rem===0?'badge-danger':rem<=5?'badge-warning':'badge-success';
+        cap+=`<tr><td><span class="badge-role">${rl[role]}</span></td><td>${s.date}/${CONFIG.month}</td><td>${s.period}</td><td><b>${wk.name}</b></td><td>${count}/${CONFIG.maxPerWorkshop}</td><td><span class="badge ${b}">${rem===0?'LOTADO':rem+' vagas'}</span></td><td><div class="cap-bar" style="width:100px"><div class="cap-bar-fill ${bc}" style="width:${pct}%"></div></div></td></tr>`;
       });
     });
   });
-  document.getElementById('tab-capacidade').innerHTML = `<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Perfil</th><th>Data</th><th>Período</th><th>Oficina</th><th>Inscritos</th><th>Status</th><th>Ocupação</th></tr></thead><tbody>${capHtml}</tbody></table></div>`;
+  document.getElementById('tab-capacidade').innerHTML=`<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Perfil</th><th>Data</th><th>Período</th><th>Oficina</th><th>Inscr.</th><th>Status</th><th>Ocupação</th></tr></thead><tbody>${cap}</tbody></table></div>`;
 
-  let regHtml = '';
-  all.forEach(r => {
-    const sels = [];
-    if (r.selections) Object.entries(r.selections).forEach(([sid, wid]) => { Object.values(SCHEDULE).forEach(d => { d.sessions.forEach(s => { if (s.id === sid && s.workshops) { const wk = s.workshops.find(w => w.id === wid); sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${wk ? wk.name : wid}`); } }); }); });
-    const sched = SCHEDULE[r.role];
-    if (sched) sched.sessions.filter(s => s.fixed).forEach(s => sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${s.fixedLabel} (FIXA)`));
-    regHtml += `<tr><td><span class="card-id" style="font-size:.72rem">${r.id}</span></td><td><b>${r.name}</b></td><td style="font-family:'DM Mono',monospace;font-size:.78rem">${r.cpf}</td><td><span class="badge-role">${roleLabels[r.role]}</span></td><td>${r.school}</td><td style="font-size:.78rem">${sels.join('<br>') || '—'}</td></tr>`;
+  let reg='';
+  all.forEach(r=>{
+    const sels=[];
+    if(r.selections)Object.entries(r.selections).forEach(([sid,wid])=>{Object.values(SCHEDULE).forEach(d=>{d.sessions.forEach(s=>{if(s.id===sid&&s.workshops){const w=s.workshops.find(x=>x.id===wid);sels.push(s.date+'/'+CONFIG.month+' '+s.period+': '+(w?w.name:wid));}});});});
+    const sch=SCHEDULE[r.role];
+    if(sch)sch.sessions.filter(s=>s.fixed).forEach(s=>sels.push(s.date+'/'+CONFIG.month+' '+s.period+': '+s.fixedLabel+' (FIXA)'));
+    reg+=`<tr><td><span class="card-id" style="font-size:.72rem">${r.id}</span></td><td><b>${r.name}</b></td><td style="font-family:'DM Mono';font-size:.78rem">${r.cpf}</td><td><span class="badge-role">${rl[r.role]}</span></td><td>${r.school}</td><td style="font-size:.78rem">${sels.join('<br>')}</td></tr>`;
   });
-  document.getElementById('tab-inscritos').innerHTML = `<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Perfil</th><th>Escola</th><th>Atividades</th></tr></thead><tbody>${regHtml || '<tr><td colspan="6" style="text-align:center;color:var(--texto-muted)">Nenhuma inscrição.</td></tr>'}</tbody></table></div>`;
+  document.getElementById('tab-inscritos').innerHTML=`<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Perfil</th><th>Escola</th><th>Atividades</th></tr></thead><tbody>${reg||'<tr><td colspan="6" style="text-align:center;color:var(--texto-muted)">Nenhuma inscrição</td></tr>'}</tbody></table></div>`;
 
-  let dayHtml = '';
-  for (let day = 15; day <= 18; day++) {
-    const dc = all.filter(r => {
-      const hasSel = r.selections && Object.keys(r.selections).some(sid => sid.includes(String(day)));
-      const hasFixed = Object.values(SCHEDULE).some(d => d.sessions.some(s => s.date === day && s.fixed));
-      return hasSel || hasFixed;
-    });
-    dayHtml += `<div class="stat-card" style="text-align:left"><div class="stat-value" style="font-size:1.5rem">${day}/${CONFIG.month}</div><div class="stat-label">${dc.length} inscritos com atividades neste dia</div></div>`;
+  let days='';
+  for(let d=15;d<=18;d++){
+    const dc=all.filter(r=>{const has=r.selections&&Object.keys(r.selections).some(sid=>sid.includes(String(d)));const fix=Object.values(SCHEDULE).some(s=>s.sessions.some(x=>x.date===d&&x.fixed));return has||fix;});
+    days+=`<div class="stat-card" style="text-align:left"><div class="stat-value" style="font-size:1.5rem">${d}/${CONFIG.month}</div><div class="stat-label">${dc.length} inscritos</div></div>`;
   }
-  document.getElementById('tab-por-dia').innerHTML = `<div class="admin-stats">${dayHtml}</div>`;
+  document.getElementById('tab-por-dia').innerHTML=`<div class="admin-stats">${days}</div>`;
 }
 
-function showAdminTab(tab) {
-  document.querySelectorAll('#adminTabs .tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('#page-admin .tab-content').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
+function showAdminTab(tab,btn){
+  document.querySelectorAll('#adminTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-admin .tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
 }
 
-function exportCSV() {
-  const all = localCache;
-  if (!all.length) { showToast('Nenhuma inscrição para exportar', 'info'); return; }
-  const rl = { diretor: 'Diretor', coordenador: 'Coordenador', professor: 'Professor' };
-  let csv = 'ID;Nome;CPF;Email;Telefone;Perfil;Escola;Oficinas\n';
-  all.forEach(r => {
-    const sels = [];
-    if (r.selections) Object.entries(r.selections).forEach(([sid, wid]) => { Object.values(SCHEDULE).forEach(d => { d.sessions.forEach(s => { if (s.id === sid && s.workshops) { const wk = s.workshops.find(w => w.id === wid); sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${wk ? wk.name : wid}`); } }); }); });
-    const sched = SCHEDULE[r.role];
-    if (sched) sched.sessions.filter(s => s.fixed).forEach(s => sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${s.fixedLabel} (FIXA)`));
-    csv += `"${r.id}";"${r.name}";"${r.cpf}";"${r.email || ''}";"${r.phone || ''}";"${rl[r.role]}";"${r.school}";"${sels.join(' | ')}"\n`;
+function exportCSV(){
+  const all=localCache;
+  if(!all.length){showToast('Nada para exportar','info');return;}
+  const rl={diretor:'Diretor',coordenador:'Coordenador',professor:'Professor'};
+  let csv='ID;Nome;CPF;Email;Telefone;Perfil;Escola;Oficinas\n';
+  all.forEach(r=>{
+    const s=[];
+    if(r.selections)Object.entries(r.selections).forEach(([sid,wid])=>{Object.values(SCHEDULE).forEach(d=>{d.sessions.forEach(x=>{if(x.id===sid&&x.workshops){const w=x.workshops.find(y=>y.id===wid);s.push(x.date+'/'+CONFIG.month+' '+x.period+': '+(w?w.name:wid));}});});});
+    const sch=SCHEDULE[r.role];
+    if(sch)sch.sessions.filter(x=>x.fixed).forEach(x=>s.push(x.date+'/'+CONFIG.month+' '+x.period+': '+x.fixedLabel+' (FIXA)'));
+    csv+=`"${r.id}";"${r.name}";"${r.cpf}";"${r.email||''}";"${r.phone||''}";"${rl[r.role]}";"${r.school}";"${s.join(' | ')}"\n`;
   });
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `inscricoes_oficinas_${CONFIG.year}.csv`; a.click();
-  showToast('CSV exportado com sucesso', 'success');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download='inscricoes.csv';a.click();
+  showToast('CSV exportado','success');
 }
 
-async function clearAll() {
-  if (!confirm('Excluir TODAS as inscrições? Esta ação é irreversível.')) return;
-  if (!confirm('Tem certeza absoluta?')) return;
+async function clearAll(){
+  if(!confirm('Excluir TODAS as inscrições?'))return;
+  if(!confirm('Tem certeza?'))return;
   showLoading(true);
-  try {
-    await Store.clearAll();
-    showToast('Todas as inscrições foram excluídas', 'success');
-    renderAdmin();
-  } catch (err) {
-    showToast('Erro ao limpar dados', 'error');
-  } finally {
-    showLoading(false);
-  }
+  try{await Store.clearAll();showToast('Todas excluídas','success');renderAdmin();}
+  catch(e){showToast('Erro: '+e.message,'error');}
+  finally{showLoading(false);}
 }
 
-// ====================================================================
-// CONFETTI
-// ====================================================================
-function showConfetti() {
-  const box = document.getElementById('confettiBox'); box.innerHTML = '';
-  const colors = ['#c8a951', '#0a2f6c', '#16a34a', '#ffec9e', '#d32f2f', '#123f7a'];
-  for (let i = 0; i < 60; i++) {
-    const p = document.createElement('div'); p.className = 'confetti-piece';
-    p.style.left = Math.random() * 100 + '%'; p.style.background = colors[Math.floor(Math.random() * colors.length)];
-    p.style.animationDelay = Math.random() * 2 + 's'; p.style.animationDuration = (2 + Math.random() * 2) + 's';
-    p.style.width = (6 + Math.random() * 8) + 'px'; p.style.height = (6 + Math.random() * 8) + 'px';
-    p.style.borderRadius = Math.random() > .5 ? '50%' : '2px'; box.appendChild(p);
+function showConfetti(){
+  const box=document.getElementById('confettiBox');box.innerHTML='';
+  const colors=['#c8a951','#0a2f6c','#16a34a','#ffec9e','#d32f2f','#123f7a'];
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');p.className='confetti-piece';
+    p.style.left=Math.random()*100+'%';p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDelay=Math.random()*2+'s';p.style.animationDuration=(2+Math.random()*2)+'s';
+    p.style.width=(6+Math.random()*8)+'px';p.style.height=p.style.width;
+    p.style.borderRadius=Math.random()>.5?'50%':'2px';box.appendChild(p);
   }
-  setTimeout(() => box.innerHTML = '', 5000);
+  setTimeout(()=>box.innerHTML='',5000);
 }
 
-// ====================================================================
-// MASKS + INIT
-// ====================================================================
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('regCPF').addEventListener('input', e => { let v = e.target.value.replace(/\D/g, '').substring(0, 11); if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4'); else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3'); else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2'); e.target.value = v; });
-  document.getElementById('regPhone').addEventListener('input', e => { let v = e.target.value.replace(/\D/g, '').substring(0, 11); if (v.length > 6) v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3'); else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2'); e.target.value = v; });
-
-  // Initialize Firestore listener
-  initFirestoreListener();
+// ======================================================================
+// INIT
+// ======================================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('regCPF').addEventListener('input',e=>{let v=e.target.value.replace(/\D/g,'').substring(0,11);if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');else if(v.length>3)v=v.replace(/(\d{3})(\d{1,3})/,'$1.$2');e.target.value=v;});
+  document.getElementById('regPhone').addEventListener('input',e=>{let v=e.target.value.replace(/\D/g,'').substring(0,11);if(v.length>6)v=v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3');else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,'($1) $2');e.target.value=v;});
+  initFirebase();
 });
 </script>
 </body>
