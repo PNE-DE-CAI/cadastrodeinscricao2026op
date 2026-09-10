@@ -6,6 +6,11 @@
 <title>Inscrição — Oficinas Pedagógicas | URE Caieiras</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
 @page{size:A4;margin:12mm 10mm 16mm 10mm}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -34,14 +39,15 @@ body{
   -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
 h1,h2,h3,h4{font-family:'DM Sans',sans-serif;font-weight:800;line-height:1.2}
-.mono{font-family:'DM Mono',monospace}
 .page{display:none;animation:fadeUp .4s ease forwards}
 .page.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes confetti-fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
 @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,.3)}50%{box-shadow:0 0 0 8px rgba(211,47,47,0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
+/* NAV */
 nav{
   background:linear-gradient(135deg,rgba(10,47,108,.97) 0%,rgba(4,26,58,.99) 100%);
   padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:68px;
@@ -61,9 +67,15 @@ nav .nav-links button{
 }
 nav .nav-links button:hover{color:#fff;background:rgba(255,255,255,.08)}
 nav .nav-links button.active{color:var(--dourado);background:rgba(211,47,47,.2);font-weight:700}
+.sync-indicator{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:.7rem;font-family:'DM Mono',monospace}
+.sync-dot{width:8px;height:8px;border-radius:50%;transition:all .3s}
+.sync-dot.online{background:var(--verde);box-shadow:0 0 6px rgba(22,163,74,.6)}
+.sync-dot.offline{background:var(--vermelho);box-shadow:0 0 6px rgba(211,47,47,.6)}
+.sync-dot.loading{background:var(--dourado);animation:spin 1s linear infinite}
 
 .main-wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
 
+/* HERO */
 .hero-card{
   background:linear-gradient(135deg,rgba(10,47,108,.95) 0%,rgba(4,26,58,.98) 100%);
   border-radius:var(--raio-grande);padding:3.5rem 2.5rem;text-align:center;
@@ -71,162 +83,85 @@ nav .nav-links button.active{color:var(--dourado);background:rgba(211,47,47,.2);
   box-shadow:var(--sombra-float);border:1px solid rgba(255,236,158,.08);
   margin-bottom:2rem;animation:fadeUp .5s ease;
 }
-.hero-card::before{
-  content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;
-  background:radial-gradient(circle,rgba(211,47,47,.12) 0%,transparent 65%);pointer-events:none;
-}
+.hero-card::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(211,47,47,.12) 0%,transparent 65%);pointer-events:none}
 .hero-card *{position:relative;z-index:1}
-.hero-badge{
-  display:inline-block;background:var(--vermelho);color:#fff;
-  padding:6px 24px;border-radius:var(--raio-pill);font-weight:800;
-  letter-spacing:1.5px;font-size:.7rem;text-transform:uppercase;
-  box-shadow:0 4px 16px rgba(211,47,47,.4);margin-bottom:24px;
-}
+.hero-badge{display:inline-block;background:var(--vermelho);color:#fff;padding:6px 24px;border-radius:var(--raio-pill);font-weight:800;letter-spacing:1.5px;font-size:.7rem;text-transform:uppercase;box-shadow:0 4px 16px rgba(211,47,47,.4);margin-bottom:24px}
 .hero-card h1{color:#fff;font-size:2.4rem;margin-bottom:8px}
 .hero-card h1 span{display:block;font-weight:400;font-size:1.1rem;color:var(--dourado);margin-top:8px}
 .hero-line{width:70px;height:3px;background:linear-gradient(90deg,var(--vermelho),var(--dourado));margin:24px auto;border-radius:4px}
 .hero-card p{color:var(--texto-footer);font-size:.95rem;max-width:520px;margin:0 auto 2rem}
 .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .hero-stats{display:flex;gap:16px;justify-content:center;margin-top:24px;flex-wrap:wrap}
-.hero-stat{
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
-  padding:8px 20px;border-radius:var(--raio-pill);color:rgba(255,255,255,.7);
-  font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.04em;
-}
+.hero-stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);padding:8px 20px;border-radius:var(--raio-pill);color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.04em}
 .hero-stat b{color:var(--dourado)}
 
-.btn{
-  display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;
-  border-radius:var(--raio-pill);font-family:'DM Sans',sans-serif;font-size:.9rem;
-  font-weight:700;cursor:pointer;transition:all .25s ease;letter-spacing:.02em;text-decoration:none;
-}
-.btn-primary{
-  background:linear-gradient(135deg,var(--azul-escuro) 0%,var(--azul-medio) 100%);color:#fff;
-  box-shadow:0 4px 16px rgba(10,47,108,.3);border:1px solid rgba(255,236,158,.1);
-}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;border-radius:var(--raio-pill);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .25s ease;letter-spacing:.02em;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:#fff;box-shadow:0 4px 16px rgba(10,47,108,.3);border:1px solid rgba(255,236,158,.1)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,47,108,.4)}
-.btn-accent{
-  background:linear-gradient(135deg,var(--vermelho) 0%,var(--vermelho-hover) 100%);color:#fff;
-  box-shadow:0 4px 16px rgba(211,47,47,.3);
-}
+.btn-accent{background:linear-gradient(135deg,var(--vermelho),var(--vermelho-hover));color:#fff;box-shadow:0 4px 16px rgba(211,47,47,.3)}
 .btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(211,47,47,.4)}
-.btn-gold{
-  background:linear-gradient(135deg,var(--dourado) 0%,#f0d060 100%);color:var(--azul-profundo);
-  font-weight:800;box-shadow:0 4px 16px rgba(255,236,158,.3);
-}
+.btn-gold{background:linear-gradient(135deg,var(--dourado),#f0d060);color:var(--azul-profundo);font-weight:800;box-shadow:0 4px 16px rgba(255,236,158,.3)}
 .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,236,158,.4)}
 .btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.25)}
 .btn-outline:hover{border-color:var(--dourado);color:var(--dourado);background:rgba(255,236,158,.05)}
-.btn-ghost{
-  background:rgba(255,255,255,.05);color:var(--texto-footer);border:1px solid rgba(255,255,255,.1);
-  padding:10px 20px;
-}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--texto-footer);border:1px solid rgba(255,255,255,.1);padding:10px 20px}
 .btn-ghost:hover{border-color:rgba(255,236,158,.3);color:var(--dourado)}
 .btn-danger{background:var(--vermelho);color:#fff}
 .btn-sm{padding:8px 18px;font-size:.8rem}
 .btn-lg{padding:14px 36px;font-size:1rem}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
 
-.card{
-  background:#fff;border-radius:var(--raio-card);padding:2rem;
-  box-shadow:var(--sombra-card);border:1.5px solid rgba(10,47,108,.08);
-  animation:fadeUp .4s ease forwards;position:relative;overflow:hidden;
-}
-.card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:4px;
-  background:linear-gradient(90deg,var(--azul-escuro),var(--vermelho),var(--dourado));
-}
+/* CARDS */
+.card{background:#fff;border-radius:var(--raio-card);padding:2rem;box-shadow:var(--sombra-card);border:1.5px solid rgba(10,47,108,.08);animation:fadeUp .4s ease forwards;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--azul-escuro),var(--vermelho),var(--dourado))}
 .card-header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--borda-fina)}
 .card-header h2{font-size:1.4rem;color:var(--azul-escuro)}
-.card-header p{color:var(--texto-muted);font-size:.9rem;margin-top:4px;font-weight:400}
+.card-header p{color:var(--texto-muted);font-size:.9rem;margin-top:4px}
 
+/* STEPS */
 .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:2.5rem}
 .step-item{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--texto-suave);font-weight:600}
-.step-item .step-num{
-  width:34px;height:34px;border-radius:50%;
-  border:2.5px solid var(--borda-clara);display:flex;align-items:center;justify-content:center;
-  font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;transition:all .3s ease;
-}
+.step-item .step-num{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--borda-clara);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;transition:all .3s ease}
 .step-item.active .step-num{border-color:var(--vermelho);background:var(--vermelho);color:#fff}
 .step-item.done .step-num{border-color:var(--verde);background:var(--verde);color:#fff}
 .step-item.active{color:var(--azul-escuro);font-weight:700}
 .step-line{width:44px;height:2.5px;background:var(--borda-fina);margin:0 8px;border-radius:2px}
 .step-line.done{background:var(--verde)}
 
+/* FORMS */
 .form-group{margin-bottom:1.25rem}
 .form-group label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--texto-corpo)}
 .form-group label .req{color:var(--vermelho)}
-.form-control{
-  width:100%;padding:12px 16px;border:2px solid var(--borda-clara);border-radius:var(--raio-pequeno);
-  font-family:'DM Sans',sans-serif;font-size:.95rem;transition:all .25s ease;background:#fff;color:var(--texto-corpo);
-}
+.form-control{width:100%;padding:12px 16px;border:2px solid var(--borda-clara);border-radius:var(--raio-pequeno);font-family:'DM Sans',sans-serif;font-size:.95rem;transition:all .25s ease;background:#fff;color:var(--texto-corpo)}
 .form-control:focus{outline:none;border-color:var(--azul-medio);box-shadow:0 0 0 3px rgba(18,63,122,.1)}
 .form-control::placeholder{color:var(--texto-suave)}
-select.form-control{
-  appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 16px center;
-}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 @media(max-width:600px){.form-row{grid-template-columns:1fr}}
 
-.session-card{
-  background:#fff;border:2px solid var(--borda-clara);border-radius:var(--raio-card);
-  padding:1.5rem;margin-bottom:1.25rem;transition:all .25s ease;position:relative;overflow:hidden;
-}
-.session-card::before{
-  content:'';position:absolute;top:0;left:0;bottom:0;width:4px;
-  background:linear-gradient(180deg,var(--azul-escuro),var(--vermelho));
-}
+/* SESSIONS */
+.session-card{background:#fff;border:2px solid var(--borda-clara);border-radius:var(--raio-card);padding:1.5rem;margin-bottom:1.25rem;transition:all .25s ease;position:relative;overflow:hidden}
+.session-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--azul-escuro),var(--vermelho))}
 .session-card:hover{border-color:var(--azul-medio);box-shadow:var(--sombra-card)}
 .session-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:8px}
 .session-header h3{font-size:1.05rem;color:var(--azul-escuro)}
 .session-date{display:flex;align-items:center;gap:8px}
-.session-date .date-badge{
-  background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:#fff;
-  padding:6px 16px;border-radius:var(--raio-pill);font-weight:800;font-size:.85rem;
-  font-family:'DM Mono',monospace;
-}
-.session-date .period-badge{
-  background:var(--amarelo-bg);color:var(--amarelo-texto);
-  padding:6px 14px;border-radius:var(--raio-pill);font-weight:700;font-size:.8rem;
-}
+.session-date .date-badge{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:#fff;padding:6px 16px;border-radius:var(--raio-pill);font-weight:800;font-size:.85rem;font-family:'DM Mono',monospace}
+.session-date .period-badge{background:var(--amarelo-bg);color:var(--amarelo-texto);padding:6px 14px;border-radius:var(--raio-pill);font-weight:700;font-size:.8rem}
 .session-theme{color:var(--texto-muted);font-size:.88rem;margin-bottom:.75rem;font-style:italic}
-.session-audience{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--azul-badge-bg);color:var(--azul-badge-txt);
-  padding:5px 14px;border-radius:var(--raio-pill);font-size:.78rem;font-weight:700;
-}
-.session-fixed{
-  background:var(--verde-bg);color:var(--verde-escuro);
-  padding:14px 18px;border-radius:var(--raio-pequeno);font-weight:700;
-  display:flex;align-items:center;gap:10px;font-size:.9rem;
-  border:1.5px solid #86efac;
-}
-.session-optional{
-  background:var(--azul-badge-bg);color:var(--azul-badge-txt);
-  padding:8px 14px;border-radius:var(--raio-pequeno);font-size:.78rem;font-weight:600;
-  margin-bottom:.75rem;display:flex;align-items:center;gap:6px;
-}
-.session-skip{
-  display:flex;align-items:center;gap:8px;margin-bottom:10px;
-  padding:10px 14px;border:2px dashed var(--borda-clara);border-radius:var(--raio-pequeno);
-  cursor:pointer;transition:all .25s ease;font-size:.85rem;color:var(--texto-muted);font-weight:600;
-}
+.session-audience{display:inline-flex;align-items:center;gap:6px;background:var(--azul-badge-bg);color:var(--azul-badge-txt);padding:5px 14px;border-radius:var(--raio-pill);font-size:.78rem;font-weight:700}
+.session-fixed{background:var(--verde-bg);color:var(--verde-escuro);padding:14px 18px;border-radius:var(--raio-pequeno);font-weight:700;display:flex;align-items:center;gap:10px;font-size:.9rem;border:1.5px solid #86efac}
+.session-optional{background:var(--azul-badge-bg);color:var(--azul-badge-txt);padding:8px 14px;border-radius:var(--raio-pequeno);font-size:.78rem;font-weight:600;margin-bottom:.75rem;display:flex;align-items:center;gap:6px}
+.session-skip{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:10px 14px;border:2px dashed var(--borda-clara);border-radius:var(--raio-pequeno);cursor:pointer;transition:all .25s ease;font-size:.85rem;color:var(--texto-muted);font-weight:600}
 .session-skip:hover{border-color:var(--azul-medio);color:var(--azul-escuro)}
 .session-skip input{accent-color:var(--azul-escuro);width:16px;height:16px}
 .session-skip.skip-active{border-color:var(--verde);background:var(--verde-bg);color:var(--verde-escuro)}
 .workshop-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:.75rem}
-.workshop-opt{
-  position:relative;border:2px solid var(--borda-clara);border-radius:var(--raio-medio);
-  padding:16px;cursor:pointer;transition:all .25s ease;text-align:center;
-}
+.workshop-opt{position:relative;border:2px solid var(--borda-clara);border-radius:var(--raio-medio);padding:16px;cursor:pointer;transition:all .25s ease;text-align:center}
 .workshop-opt:hover:not(.disabled){border-color:var(--azul-medio);background:var(--superficie)}
 .workshop-opt input{position:absolute;opacity:0}
-.workshop-opt.selected{
-  border-color:var(--vermelho);background:var(--vermelho-claro);
-  box-shadow:0 0 0 3px rgba(211,47,47,.12);
-}
+.workshop-opt.selected{border-color:var(--vermelho);background:var(--vermelho-claro);box-shadow:0 0 0 3px rgba(211,47,47,.12)}
 .workshop-opt.disabled{opacity:.4;cursor:not-allowed;background:var(--superficie-alt)}
 .workshop-opt .wk-name{font-weight:800;font-size:.9rem;color:var(--azul-escuro);margin-bottom:4px}
 .workshop-opt .wk-cap{font-size:.75rem;color:var(--texto-muted);font-family:'DM Mono',monospace}
@@ -238,178 +173,113 @@ select.form-control{
 .cap-bar-fill.mid{background:#ca8a04}
 .cap-bar-fill.high{background:var(--vermelho)}
 
-.card-preview{
-  background:#fff;border-radius:var(--raio-card);overflow:hidden;max-width:680px;margin:0 auto;
-  box-shadow:var(--sombra-float);border:2px solid rgba(10,47,108,.1);
-}
-.card-preview-header{
-  background:linear-gradient(135deg,var(--azul-escuro) 0%,var(--azul-profundo) 100%);
-  padding:2.25rem 2rem;text-align:center;color:#fff;position:relative;
-}
-.card-preview-header::after{
-  content:'';position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
-  width:28px;height:28px;background:#fff;
-  border:3px solid var(--azul-escuro);border-radius:50%;
-}
+/* CARD PREVIEW */
+.card-preview{background:#fff;border-radius:var(--raio-card);overflow:hidden;max-width:680px;margin:0 auto;box-shadow:var(--sombra-float);border:2px solid rgba(10,47,108,.1)}
+.card-preview-header{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));padding:2.25rem 2rem;text-align:center;color:#fff;position:relative}
+.card-preview-header::after{content:'';position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:28px;height:28px;background:#fff;border:3px solid var(--azul-escuro);border-radius:50%}
 .card-preview-header .card-logo{height:50px;background:#fff;padding:5px 10px;border-radius:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .card-preview-header h3{font-size:1.2rem;color:var(--dourado);margin-bottom:4px;font-family:'DM Mono',monospace;letter-spacing:.5px}
 .card-preview-header .ev-name{font-size:.85rem;color:var(--texto-footer);font-weight:400}
 .card-preview-body{padding:1.75rem 2rem 2rem}
-.card-participant-info{
-  display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;
-  margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:2px dashed var(--borda-fina);
-}
+.card-participant-info{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:2px dashed var(--borda-fina)}
 .card-participant-info .info-item{font-size:.85rem}
-.card-participant-info .info-item .info-label{
-  color:var(--texto-suave);font-family:'DM Mono',monospace;font-size:.65rem;
-  text-transform:uppercase;letter-spacing:.1em;font-weight:500;
-}
+.card-participant-info .info-item .info-label{color:var(--texto-suave);font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;font-weight:500}
 .card-participant-info .info-item .info-value{font-weight:700;color:var(--azul-escuro);margin-top:2px}
 .card-schedule{width:100%;border-collapse:collapse;font-size:.82rem;border-radius:var(--raio-pequeno);overflow:hidden}
-.card-schedule th{
-  background:var(--azul-escuro);color:#fff;padding:10px 14px;text-align:left;
-  font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500;
-}
+.card-schedule th{background:var(--azul-escuro);color:#fff;padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
 .card-schedule td{padding:10px 14px;border-bottom:1px solid var(--borda-fina)}
 .card-schedule tr:last-child td{border-bottom:none}
 .card-schedule tr:nth-child(even){background:var(--superficie)}
-.card-footer{
-  background:var(--superficie);padding:14px 2rem;text-align:center;
-  border-top:1.5px solid var(--borda-fina);
-  font-family:'DM Mono',monospace;font-size:.72rem;color:var(--texto-suave);letter-spacing:.06em;
-}
-.card-id{
-  font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;
-  color:var(--vermelho);letter-spacing:.12em;
-}
+.card-footer{background:var(--superficie);padding:14px 2rem;text-align:center;border-top:1.5px solid var(--borda-fina);font-family:'DM Mono',monospace;font-size:.72rem;color:var(--texto-suave);letter-spacing:.06em}
+.card-id{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;color:var(--vermelho);letter-spacing:.12em}
 
+/* SEARCH */
 .search-box{position:relative;max-width:500px;margin:0 auto 2rem}
-.search-box input{
-  width:100%;padding:14px 14px 14px 48px;
-  border:2px solid var(--borda-clara);border-radius:var(--raio-pill);
-  font-size:.95rem;font-family:'DM Sans',sans-serif;transition:all .25s ease;background:#fff;
-}
+.search-box input{width:100%;padding:14px 14px 14px 48px;border:2px solid var(--borda-clara);border-radius:var(--raio-pill);font-size:.95rem;font-family:'DM Sans',sans-serif;transition:all .25s ease;background:#fff}
 .search-box input:focus{outline:none;border-color:var(--azul-medio);box-shadow:0 0 0 3px rgba(18,63,122,.1)}
 .search-box .search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--texto-suave);font-size:1.1rem}
-.result-card{
-  background:#fff;border:1.5px solid var(--borda-clara);border-radius:var(--raio-card);
-  padding:1.25rem 1.5rem;margin-bottom:1rem;display:flex;align-items:center;
-  justify-content:space-between;flex-wrap:wrap;gap:12px;transition:all .25s ease;cursor:pointer;
-}
+.result-card{background:#fff;border:1.5px solid var(--borda-clara);border-radius:var(--raio-card);padding:1.25rem 1.5rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;transition:all .25s ease;cursor:pointer}
 .result-card:hover{border-color:var(--azul-medio);box-shadow:var(--sombra-card);transform:translateY(-2px)}
 .result-info h4{font-size:1.05rem;color:var(--azul-escuro);margin-bottom:4px}
 .result-info p{font-size:.85rem;color:var(--texto-muted)}
 
-.badge{
-  display:inline-block;padding:3px 12px;border-radius:var(--raio-pill);
-  font-family:'DM Mono',monospace;font-size:.68rem;font-weight:600;
-  letter-spacing:.04em;text-transform:uppercase;
-}
+/* BADGES */
+.badge{display:inline-block;padding:3px 12px;border-radius:var(--raio-pill);font-family:'DM Mono',monospace;font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .badge-success{background:var(--verde-bg);color:var(--verde-escuro)}
 .badge-danger{background:var(--vermelho-bg);color:var(--vermelho)}
 .badge-warning{background:var(--amarelo-bg);color:var(--amarelo-texto)}
 .badge-info{background:var(--azul-badge-bg);color:var(--azul-badge-txt)}
-.badge-role{
-  background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));
-  color:var(--dourado);padding:4px 14px;font-size:.7rem;font-weight:700;
-}
+.badge-role{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio));color:var(--dourado);padding:4px 14px;font-size:.7rem;font-weight:700}
 
-.alert{
-  padding:14px 18px;border-radius:var(--raio-medio);font-size:.88rem;
-  margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px;
-}
+/* ALERTS */
+.alert{padding:14px 18px;border-radius:var(--raio-medio);font-size:.88rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px}
 .alert-info{background:var(--azul-badge-bg);color:var(--azul-badge-txt);border-left:4px solid var(--azul-medio)}
 .alert-success{background:var(--verde-bg);color:var(--verde-escuro);border-left:4px solid var(--verde)}
 .alert-warning{background:var(--amarelo-bg);color:var(--amarelo-texto);border-left:4px solid #ca8a04}
 .alert-danger{background:var(--vermelho-bg);color:var(--vermelho);border-left:4px solid var(--vermelho)}
 
+/* CONFIRM */
 .confirm-box{background:var(--superficie);border:1.5px solid var(--borda-fina);border-radius:var(--raio-medio);padding:1.25rem;margin-bottom:1rem}
-.confirm-box h4{
-  font-size:.75rem;color:var(--texto-suave);
-  font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;font-weight:500;
-}
+.confirm-box h4{font-size:.75rem;color:var(--texto-suave);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;font-weight:500}
 
+/* ADMIN */
 .admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
-.stat-card{
-  background:#fff;border:1.5px solid var(--borda-clara);border-radius:var(--raio-card);
-  padding:1.25rem;text-align:center;transition:all .25s ease;
-}
+.stat-card{background:#fff;border:1.5px solid var(--borda-clara);border-radius:var(--raio-card);padding:1.25rem;text-align:center;transition:all .25s ease}
 .stat-card:hover{box-shadow:var(--sombra-card)}
 .stat-card .stat-value{font-family:'DM Sans',sans-serif;font-size:2rem;font-weight:800;color:var(--azul-escuro)}
-.stat-card .stat-label{
-  font-family:'DM Mono',monospace;font-size:.72rem;color:var(--texto-suave);
-  margin-top:4px;text-transform:uppercase;letter-spacing:.08em;
-}
+.stat-card .stat-label{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--texto-suave);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
 .admin-table-wrap{overflow-x:auto;border-radius:var(--raio-medio);border:1.5px solid var(--borda-fina)}
 .admin-table{width:100%;border-collapse:collapse;font-size:.82rem}
-.admin-table th{
-  background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));
-  color:#fff;padding:10px 14px;text-align:left;white-space:nowrap;
-  font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500;
-}
+.admin-table th{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));color:#fff;padding:10px 14px;text-align:left;white-space:nowrap;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
 .admin-table td{padding:10px 14px;border-bottom:1px solid var(--borda-fina)}
 .admin-table tr:hover{background:var(--superficie)}
 
-.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:2.5px solid var(--borda-fina);padding-bottom:0}
-.tab-btn{
-  background:none;border:none;padding:10px 20px;font-family:'DM Sans',sans-serif;
-  font-size:.88rem;font-weight:600;color:var(--texto-suave);cursor:pointer;
-  border-bottom:2.5px solid transparent;margin-bottom:-2.5px;transition:all .25s ease;
-}
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:2.5px solid var(--borda-fina);padding-bottom:0;flex-wrap:wrap}
+.tab-btn{background:none;border:none;padding:10px 20px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;color:var(--texto-suave);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2.5px;transition:all .25s ease}
 .tab-btn:hover{color:var(--azul-escuro)}
 .tab-btn.active{color:var(--vermelho);border-bottom-color:var(--vermelho);font-weight:700}
 .tab-content{display:none;animation:fadeIn .3s ease}
 .tab-content.active{display:block}
 
+/* PASSWORD */
 .pw-gate{max-width:420px;margin:4rem auto;text-align:center}
-.pw-gate .pw-icon{
-  width:72px;height:72px;
-  background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));
-  border-radius:50%;display:flex;align-items:center;justify-content:center;
-  margin:0 auto 1.5rem;font-size:1.5rem;color:var(--dourado);
-  box-shadow:0 8px 24px rgba(10,47,108,.25);
-}
+.pw-gate .pw-icon{width:72px;height:72px;background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:1.5rem;color:var(--dourado);box-shadow:0 8px 24px rgba(10,47,108,.25)}
 
+/* PROGRAM TABLE */
 .prog-table-wrap{overflow-x:auto;border-radius:var(--raio-medio);border:1.5px solid var(--borda-fina);margin-top:1.5rem}
 .prog-table{width:100%;border-collapse:collapse;font-size:.82rem}
-.prog-table th{
-  background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));
-  color:#fff;padding:10px 14px;text-align:left;
-  font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500;
-}
+.prog-table th{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-profundo));color:#fff;padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
 .prog-table td{padding:10px 14px;border-bottom:1px solid var(--borda-fina);vertical-align:top}
 .prog-table tr:nth-child(even){background:var(--superficie)}
-.prog-table .day-num{
-  font-family:'DM Mono',monospace;font-weight:700;color:var(--azul-escuro);
-  background:var(--azul-badge-bg);padding:4px 10px;border-radius:var(--raio-pill);font-size:.85rem;
-}
-.prog-table .period-tag{
-  font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;
-  padding:3px 10px;border-radius:var(--raio-pill);
-}
+.prog-table .day-num{font-family:'DM Mono',monospace;font-weight:700;color:var(--azul-escuro);background:var(--azul-badge-bg);padding:4px 10px;border-radius:var(--raio-pill);font-size:.85rem}
+.prog-table .period-tag{font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:var(--raio-pill)}
 .period-manha{background:#dcfce7;color:#14532d}
 .period-tarde{background:#fef3c7;color:#92400e}
+
+/* TOAST */
+.toast-container{position:fixed;top:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:14px 20px;border-radius:var(--raio-medio);font-size:.88rem;font-weight:600;color:#fff;box-shadow:var(--sombra-float);animation:slideInToast .3s ease;max-width:380px;display:flex;align-items:center;gap:10px}
+.toast-success{background:linear-gradient(135deg,var(--verde),#15803d)}
+.toast-error{background:linear-gradient(135deg,var(--vermelho),var(--vermelho-hover))}
+.toast-info{background:linear-gradient(135deg,var(--azul-escuro),var(--azul-medio))}
+@keyframes slideInToast{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
 
 .confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden}
 .confetti-piece{position:absolute;width:10px;height:10px;top:-10px;animation:confetti-fall 3s ease-in forwards}
 
-@media print{
-  nav,.no-print,footer{display:none!important}
-  body{background:#fff!important;padding:0;font-size:8pt}
-  .page{display:none!important}
-  #page-print{display:block!important}
-  .card-preview{border-width:2px;box-shadow:none;max-width:100%;margin:0;border-radius:0}
-  .main-wrap{padding:0;max-width:100%}
-  .card{box-shadow:none;border-radius:0}
-}
+/* LOADING OVERLAY */
+.loading-overlay{position:fixed;inset:0;background:rgba(4,22,51,.7);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.loading-overlay .spinner{width:48px;height:48px;border:4px solid rgba(255,236,158,.2);border-top-color:var(--dourado);border-radius:50%;animation:spin .8s linear infinite}
+
+@media print{nav,.no-print,.toast-container{display:none!important}body{background:#fff!important;padding:0;font-size:8pt}.page{display:none!important}#page-print{display:block!important}.card-preview{border-width:2px;box-shadow:none;max-width:100%;margin:0;border-radius:0}.main-wrap{padding:0;max-width:100%}.card{box-shadow:none;border-radius:0}}
 @media(max-width:768px){
-  nav{padding:0 1rem;height:60px}
+  nav{padding:0 1rem;height:60px;flex-wrap:wrap}
   nav .brand img{height:32px}
   nav .brand-text .brand-title{font-size:.78rem}
   nav .brand-text .brand-sub{display:none}
   nav .nav-links button{font-size:.75rem;padding:6px 10px}
   .hero-card h1{font-size:1.7rem}
-  .hero-card p{font-size:.88rem}
   .main-wrap{padding:1.25rem 1rem}
   .workshop-options{grid-template-columns:1fr}
   .card-participant-info{grid-template-columns:1fr}
@@ -417,12 +287,7 @@ select.form-control{
   .admin-stats{grid-template-columns:1fr 1fr}
   .form-row{grid-template-columns:1fr}
 }
-@media(max-width:480px){
-  nav .nav-links{gap:2px}
-  nav .nav-links button{padding:5px 8px;font-size:.7rem}
-  .hero-card{padding:2rem 1.25rem;border-radius:var(--raio-card)}
-}
-
+@media(max-width:480px){nav .nav-links{gap:2px}nav .nav-links button{padding:5px 8px;font-size:.7rem}.hero-card{padding:2rem 1.25rem;border-radius:var(--raio-card)}}
 ::-webkit-scrollbar{width:8px}
 ::-webkit-scrollbar-track{background:var(--fundo-externo)}
 ::-webkit-scrollbar-thumb{background:var(--azul-medio);border-radius:4px}
@@ -445,7 +310,10 @@ select.form-control{
     <button onclick="showPage('consult')" data-page="consult">Consultar</button>
     <button onclick="showPage('admin')" data-page="admin">Admin</button>
   </div>
+  <div class="sync-indicator" id="syncStatus"><span class="sync-dot loading"></span> Conectando...</div>
 </nav>
+
+<div class="toast-container" id="toastBox"></div>
 
 <!-- HOME -->
 <div id="page-home" class="page active">
@@ -466,10 +334,7 @@ select.form-control{
       </div>
     </div>
     <div class="card" style="animation-delay:.15s">
-      <div class="card-header">
-        <h2>Programação</h2>
-        <p>Resumo das atividades por dia e período</p>
-      </div>
+      <div class="card-header"><h2>Programação</h2><p>Resumo das atividades por dia e período</p></div>
       <div class="prog-table-wrap">
         <table class="prog-table">
           <thead><tr><th>Data</th><th>Período</th><th>Tema / Atividade</th><th>Público</th><th>Tipo</th></tr></thead>
@@ -499,61 +364,28 @@ select.form-control{
       <div class="step-line"></div>
       <div class="step-item" data-step="3"><span class="step-num">3</span> Confirmação</div>
     </div>
-
-    <!-- STEP 1 -->
     <div id="step1" class="card">
-      <div class="card-header">
-        <h2>Dados Pessoais</h2>
-        <p>Preencha suas informações para realizar a inscrição</p>
-      </div>
+      <div class="card-header"><h2>Dados Pessoais</h2><p>Preencha suas informações para realizar a inscrição</p></div>
       <div id="step1Alert"></div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Nome Completo <span class="req">*</span></label>
-          <input type="text" class="form-control" id="regName" placeholder="Digite seu nome completo">
-        </div>
-        <div class="form-group">
-          <label>CPF <span class="req">*</span></label>
-          <input type="text" class="form-control" id="regCPF" placeholder="000.000.000-00" maxlength="14">
-        </div>
+        <div class="form-group"><label>Nome Completo <span class="req">*</span></label><input type="text" class="form-control" id="regName" placeholder="Digite seu nome completo"></div>
+        <div class="form-group"><label>CPF <span class="req">*</span></label><input type="text" class="form-control" id="regCPF" placeholder="000.000.000-00" maxlength="14"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>E-mail</label>
-          <input type="email" class="form-control" id="regEmail" placeholder="seu@email.com">
-        </div>
-        <div class="form-group">
-          <label>Telefone</label>
-          <input type="text" class="form-control" id="regPhone" placeholder="(00) 00000-0000" maxlength="15">
-        </div>
+        <div class="form-group"><label>E-mail</label><input type="email" class="form-control" id="regEmail" placeholder="seu@email.com"></div>
+        <div class="form-group"><label>Telefone</label><input type="text" class="form-control" id="regPhone" placeholder="(00) 00000-0000" maxlength="15"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Perfil <span class="req">*</span></label>
-          <select class="form-control" id="regRole">
-            <option value="">Selecione...</option>
-            <option value="diretor">Diretor(a)</option>
-            <option value="coordenador">Coordenador(a)</option>
-            <option value="professor">Professor(a)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Unidade Escolar (UE) <span class="req">*</span></label>
-          <input type="text" class="form-control" id="regSchool" placeholder="Nome da UE">
-        </div>
+        <div class="form-group"><label>Perfil <span class="req">*</span></label><select class="form-control" id="regRole"><option value="">Selecione...</option><option value="diretor">Diretor(a)</option><option value="coordenador">Coordenador(a)</option><option value="professor">Professor(a)</option></select></div>
+        <div class="form-group"><label>Unidade Escolar (UE) <span class="req">*</span></label><input type="text" class="form-control" id="regSchool" placeholder="Nome da UE"></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:1rem">
         <button class="btn btn-ghost" onclick="showPage('home')">Cancelar</button>
         <button class="btn btn-primary" onclick="goToStep(2)">Próximo →</button>
       </div>
     </div>
-
-    <!-- STEP 2 -->
     <div id="step2" class="card" style="display:none">
-      <div class="card-header">
-        <h2>Seleção de Oficinas</h2>
-        <p>Escolha livremente as oficinas que deseja participar. Você não é obrigado a selecionar todas. Vagas limitadas a 35 por oficina.</p>
-      </div>
+      <div class="card-header"><h2>Seleção de Oficinas</h2><p>Escolha livremente as oficinas. Você não é obrigado a selecionar todas. Vagas limitadas a 35 por oficina.</p></div>
       <div id="step2Alert"></div>
       <div id="workshopList"></div>
       <div style="display:flex;justify-content:space-between;gap:12px;margin-top:1.5rem">
@@ -561,21 +393,14 @@ select.form-control{
         <button class="btn btn-primary" onclick="goToStep(3)">Revisar Inscrição →</button>
       </div>
     </div>
-
-    <!-- STEP 3 -->
     <div id="step3" class="card" style="display:none">
-      <div class="card-header">
-        <h2>Revisão e Confirmação</h2>
-        <p>Verifique os dados antes de confirmar sua inscrição</p>
-      </div>
+      <div class="card-header"><h2>Revisão e Confirmação</h2><p>Verifique os dados antes de confirmar sua inscrição</p></div>
       <div id="confirmContent"></div>
       <div style="display:flex;justify-content:space-between;gap:12px;margin-top:1.5rem">
         <button class="btn btn-ghost" onclick="goToStep(2)">← Voltar</button>
-        <button class="btn btn-accent btn-lg" onclick="confirmRegistration()">Confirmar Inscrição</button>
+        <button class="btn btn-accent btn-lg" id="btnConfirm" onclick="confirmRegistration()">Confirmar Inscrição</button>
       </div>
     </div>
-
-    <!-- STEP 4 -->
     <div id="step4" style="display:none">
       <div style="text-align:center;margin-bottom:2rem;animation:fadeUp .5s ease">
         <h2 style="color:var(--verde);margin-bottom:.5rem;font-size:1.5rem">Inscrição Realizada!</h2>
@@ -595,19 +420,11 @@ select.form-control{
 <div id="page-consult" class="page">
   <div class="main-wrap">
     <div class="card">
-      <div class="card-header">
-        <h2>Consultar Inscrição</h2>
-        <p>Busque por nome, CPF ou número de inscrição</p>
-      </div>
-      <div class="search-box">
-        <span class="search-icon">&#128269;</span>
-        <input type="text" id="searchInput" placeholder="Digite para buscar..." oninput="searchRegistrations()">
-      </div>
+      <div class="card-header"><h2>Consultar Inscrição</h2><p>Busque por nome, CPF ou número de inscrição</p></div>
+      <div class="search-box"><span class="search-icon">&#128269;</span><input type="text" id="searchInput" placeholder="Digite para buscar..." oninput="searchRegistrations()"></div>
       <div id="searchResults"></div>
       <div id="viewCard" style="display:none;margin-top:2rem">
-        <div style="text-align:center;margin-bottom:1rem" class="no-print">
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('viewCard').style.display='none';document.getElementById('searchResults').innerHTML=''">← Voltar aos resultados</button>
-        </div>
+        <div style="text-align:center;margin-bottom:1rem" class="no-print"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('viewCard').style.display='none';document.getElementById('searchResults').innerHTML=''">← Voltar aos resultados</button></div>
         <div id="viewCardInner"></div>
         <div style="text-align:center;margin-top:1.5rem;display:flex;gap:12px;justify-content:center" class="no-print">
           <button class="btn btn-primary" onclick="printCard()">Imprimir Cartão</button>
@@ -625,19 +442,14 @@ select.form-control{
       <div class="pw-icon">&#128274;</div>
       <h3 style="color:#fff;margin-bottom:.5rem;font-size:1.3rem">Acesso Restrito</h3>
       <p style="color:var(--texto-footer);margin-bottom:1.5rem;font-size:.9rem">Digite a senha de administrador</p>
-      <div class="form-group">
-        <input type="password" class="form-control" id="adminPw" placeholder="Senha" onkeydown="if(event.key==='Enter')checkAdmin()">
-      </div>
+      <div class="form-group"><input type="password" class="form-control" id="adminPw" placeholder="Senha" onkeydown="if(event.key==='Enter')checkAdmin()"></div>
       <div id="adminPwAlert"></div>
       <button class="btn btn-accent" onclick="checkAdmin()" style="margin-top:.5rem">Entrar</button>
     </div>
     <div id="adminPanel" style="display:none">
       <div class="card" style="margin-bottom:1.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-          <div>
-            <h2 style="color:var(--azul-escuro);font-size:1.3rem">Painel Administrativo</h2>
-            <p style="color:var(--texto-muted);font-size:.85rem;margin-top:2px">Gestão de inscrições das oficinas pedagógicas</p>
-          </div>
+          <div><h2 style="color:var(--azul-escuro);font-size:1.3rem">Painel Administrativo</h2><p style="color:var(--texto-muted);font-size:.85rem;margin-top:2px">Gestão de inscrições &middot; Dados sincronizados em tempo real</p></div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary btn-sm" onclick="exportCSV()">Exportar CSV</button>
             <button class="btn btn-danger btn-sm" onclick="clearAll()">Limpar Tudo</button>
@@ -663,16 +475,38 @@ select.form-control{
 <div class="confetti-container" id="confettiBox"></div>
 
 <script>
+// ====================================================================
+// CONFIGURAÇÃO DO FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyDPFRi_u2bC3esst_3zO_FpMEP-YiPwjMg",
+  authDomain: "diasparaosaebcaieiras.firebaseapp.com",
+  projectId: "diasparaosaebcaieiras",
+  storageBucket: "diasparaosaebcaieiras.firebasestorage.app",
+  messagingSenderId: "102817639006",
+  appId: "1:102817639006:web:588ab04a9db5385b98a2cf",
+  measurementId: "G-WWHSTPS7LD"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COLLECTION = 'registrations';
+
+// ====================================================================
+// APP CONFIG
+// ====================================================================
 const CONFIG = { month:'Junho', year:2026, maxPerWorkshop:35, adminPassword:'adminOPcai2026' };
 
+// ====================================================================
+// SCHEDULE DATA
+// ====================================================================
 const SCHEDULE = {
   diretor: {
     sessions: [
-      { id:'d15m', date:15, period:'Manhã', theme:'Pauta dos Supervisores', audience:'Diretores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Pauta dos Supervisores — Sessão obrigatória para todos os diretores' },
+      { id:'d15m', date:15, period:'Manhã', theme:'Pauta dos Supervisores', audience:'Diretores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Pauta dos Supervisores — Sessão obrigatória' },
       { id:'d15t', date:15, period:'Tarde', theme:'Oficinas', audience:'Diretores das 67 UEs', duration:'4 horas', fixed:false, workshops:[
         { id:'dados', name:'DADOS' },{ id:'matricula', name:'MATRÍCULA' },{ id:'financeiro', name:'FINANCEIRO / COMPRAS' },{ id:'aposentadoria', name:'APOSENTADORIA' },{ id:'obras', name:'OBRAS / PATRIMÔNIO' }
       ]},
-      { id:'d18t', date:18, period:'Tarde', theme:'Encerramento / Premiação', audience:'Diretores & Coordenadores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Professor Nota 10 — Sessão de encerramento e premiação' }
+      { id:'d18t', date:18, period:'Tarde', theme:'Encerramento / Premiação', audience:'Diretores & Coordenadores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Professor Nota 10 — Encerramento e premiação' }
     ]
   },
   coordenador: {
@@ -680,7 +514,7 @@ const SCHEDULE = {
       { id:'c16m', date:16, period:'Manhã', theme:'Oficinas', audience:'Coordenadores das 67 UEs', duration:'4 horas', fixed:false, workshops:[
         { id:'dados', name:'DADOS' },{ id:'agenda_gestao', name:'AGENDA GESTÃO' }
       ]},
-      { id:'c18t', date:18, period:'Tarde', theme:'Encerramento / Premiação', audience:'Diretores & Coordenadores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Professor Nota 10 — Sessão de encerramento e premiação' }
+      { id:'c18t', date:18, period:'Tarde', theme:'Encerramento / Premiação', audience:'Diretores & Coordenadores das 67 UEs', duration:'4 horas', fixed:true, fixedLabel:'Professor Nota 10 — Encerramento e premiação' }
     ]
   },
   professor: {
@@ -699,216 +533,281 @@ const SCHEDULE = {
   }
 };
 
-// TRACK SKIPPED SESSIONS
-let skippedSessions = {};
+// ====================================================================
+// DATA STORE (FIREBASE + LOCAL CACHE)
+// ====================================================================
+let localCache = [];
+let firestoreReady = false;
+let counterRef = db.collection('meta').doc('counter');
 
 const Store = {
-  getAll(){ return JSON.parse(localStorage.getItem('oficina_registrations')||'[]'); },
-  save(l){ localStorage.setItem('oficina_registrations',JSON.stringify(l)); },
-  add(r){ const l=this.getAll(); r.id=this.generateId(); r.createdAt=new Date().toISOString(); l.push(r); this.save(l); return r; },
-  remove(id){ this.save(this.getAll().filter(r=>r.id!==id)); },
-  findByCPF(cpf){ return this.getAll().find(r=>r.cpf===cpf); },
-  findById(id){ return this.getAll().find(r=>r.id===id); },
-  generateId(){ return 'OP'+CONFIG.year+String(this.getAll().length+1).padStart(4,'0'); },
-  getWorkshopCount(sid,wid){ return this.getAll().filter(r=>r.selections&&r.selections[sid]===wid).length; },
-  clearAll(){ localStorage.removeItem('oficina_registrations'); }
+  getAll() { return localCache; },
+
+  async add(reg) {
+    const counterDoc = await counterRef.get();
+    let num = 1;
+    if (counterDoc.exists) {
+      num = (counterDoc.data().lastNum || 0) + 1;
+    }
+    reg.id = 'OP' + CONFIG.year + String(num).padStart(4, '0');
+    reg.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    reg.num = num;
+
+    await db.collection(COLLECTION).doc(reg.id).set(reg);
+    await counterRef.set({ lastNum: num });
+
+    return reg;
+  },
+
+  async remove(id) {
+    await db.collection(COLLECTION).doc(id).delete();
+  },
+
+  findByCPF(cpf) {
+    return localCache.find(r => r.cpf === cpf);
+  },
+
+  findById(id) {
+    return localCache.find(r => r.id === id);
+  },
+
+  getWorkshopCount(sid, wid) {
+    return localCache.filter(r => r.selections && r.selections[sid] === wid).length;
+  },
+
+  async clearAll() {
+    const batch = db.batch();
+    const snapshot = await db.collection(COLLECTION).get();
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.delete(counterRef);
+    await batch.commit();
+  }
 };
 
-let currentPage='home';
-function showPage(page){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const el=document.getElementById('page-'+page);
-  if(el){el.classList.add('active');el.style.animation='none';el.offsetHeight;el.style.animation='';}
-  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.remove('active'));
-  const nb=document.querySelector(`.nav-links button[data-page="${page}"]`);
-  if(nb)nb.classList.add('active');
-  currentPage=page;
-  updateHomeStats();
-  if(page==='admin'&&adminAuthenticated)renderAdmin();
-}
-function updateHomeStats(){const el=document.getElementById('homeTotal');if(el)el.textContent=Store.getAll().length;}
+// Real-time listener
+function initFirestoreListener() {
+  const syncDot = document.querySelector('.sync-dot');
+  const syncText = document.getElementById('syncStatus');
 
-let regData={};
-function startRegistration(){
-  regData={};skippedSessions={};
-  ['regName','regCPF','regEmail','regPhone','regSchool'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('regRole').value='';
-  document.getElementById('step1Alert').innerHTML='';
-  document.getElementById('step2Alert').innerHTML='';
-  document.getElementById('stepsBar').style.display='flex';
+  db.collection(COLLECTION).orderBy('num', 'asc').onSnapshot(
+    (snapshot) => {
+      localCache = snapshot.docs.map(doc => ({ ...doc.data(), _docId: doc.id }));
+      firestoreReady = true;
+      syncDot.className = 'sync-dot online';
+      syncText.innerHTML = '<span class="sync-dot online"></span> Online · ' + localCache.length + ' inscrições';
+      updateHomeStats();
+      // Refresh admin if open
+      if (currentPage === 'admin' && adminAuthenticated) renderAdmin();
+    },
+    (error) => {
+      console.error('Firestore error:', error);
+      syncDot.className = 'sync-dot offline';
+      syncText.innerHTML = '<span class="sync-dot offline"></span> Offline';
+      showToast('Erro de conexão com o servidor', 'error');
+    }
+  );
+}
+
+// ====================================================================
+// TOAST
+// ====================================================================
+function showToast(msg, type = 'info') {
+  const box = document.getElementById('toastBox');
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = (type === 'success' ? '&#10004; ' : type === 'error' ? '&#10008; ' : '&#9432; ') + msg;
+  box.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(40px)'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+function showLoading(show) {
+  let el = document.querySelector('.loading-overlay');
+  if (show && !el) {
+    el = document.createElement('div');
+    el.className = 'loading-overlay';
+    el.innerHTML = '<div class="spinner"></div>';
+    document.body.appendChild(el);
+  } else if (!show && el) {
+    el.remove();
+  }
+}
+
+// ====================================================================
+// NAVIGATION
+// ====================================================================
+let currentPage = 'home';
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) { el.classList.add('active'); el.style.animation = 'none'; el.offsetHeight; el.style.animation = ''; }
+  document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+  const nb = document.querySelector(`.nav-links button[data-page="${page}"]`);
+  if (nb) nb.classList.add('active');
+  currentPage = page;
+  updateHomeStats();
+  if (page === 'admin' && adminAuthenticated) renderAdmin();
+}
+function updateHomeStats() { const el = document.getElementById('homeTotal'); if (el) el.textContent = localCache.length; }
+
+// ====================================================================
+// REGISTRATION
+// ====================================================================
+let regData = {};
+let skippedSessions = {};
+
+function startRegistration() {
+  regData = {}; skippedSessions = {};
+  ['regName', 'regCPF', 'regEmail', 'regPhone', 'regSchool'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('regRole').value = '';
+  document.getElementById('step1Alert').innerHTML = '';
+  document.getElementById('step2Alert').innerHTML = '';
+  document.getElementById('stepsBar').style.display = 'flex';
   goToStep(1);
   showPage('register');
 }
 
-function goToStep(step){
-  if(step===2&&!validateStep1())return;
-  if(step===3&&!validateStep2())return;
-  [1,2,3,4].forEach(s=>{const el=document.getElementById('step'+s);if(el)el.style.display=s===step?'block':'none';});
-  document.querySelectorAll('.step-item').forEach((si,i)=>{si.classList.remove('active','done');const sn=i+1;if(sn===step)si.classList.add('active');else if(sn<step)si.classList.add('done');});
-  document.querySelectorAll('.step-line').forEach((sl,i)=>{sl.classList.toggle('done',i+1<step);});
-  if(step===2)renderWorkshops();
-  if(step===3)renderConfirmation();
+function goToStep(step) {
+  if (step === 2 && !validateStep1()) return;
+  if (step === 3 && !validateStep2()) return;
+  [1, 2, 3, 4].forEach(s => { const el = document.getElementById('step' + s); if (el) el.style.display = s === step ? 'block' : 'none'; });
+  document.querySelectorAll('.step-item').forEach((si, i) => { si.classList.remove('active', 'done'); const sn = i + 1; if (sn === step) si.classList.add('active'); else if (sn < step) si.classList.add('done'); });
+  document.querySelectorAll('.step-line').forEach((sl, i) => { sl.classList.toggle('done', i + 1 < step); });
+  if (step === 2) renderWorkshops();
+  if (step === 3) renderConfirmation();
 }
 
-function validateStep1(){
-  const name=document.getElementById('regName').value.trim();
-  const cpf=document.getElementById('regCPF').value.trim();
-  const role=document.getElementById('regRole').value;
-  const school=document.getElementById('regSchool').value.trim();
-  const alertEl=document.getElementById('step1Alert');
-  alertEl.innerHTML='';
-  if(!name){alertEl.innerHTML='<div class="alert alert-danger">Informe o nome completo.</div>';return false;}
-  if(!cpf||cpf.replace(/\D/g,'').length<11){alertEl.innerHTML='<div class="alert alert-danger">Informe um CPF válido.</div>';return false;}
-  if(!role){alertEl.innerHTML='<div class="alert alert-danger">Selecione o perfil.</div>';return false;}
-  if(!school){alertEl.innerHTML='<div class="alert alert-danger">Informe a Unidade Escolar.</div>';return false;}
-  const existing=Store.findByCPF(cpf);
-  if(existing){
-    alertEl.innerHTML='<div class="alert alert-warning">Já existe inscrição para este CPF. <a href="#" onclick="event.preventDefault();showPage(\'consult\');document.getElementById(\'searchInput\').value=\''+cpf+'\';searchRegistrations()" style="color:var(--azul-badge-txt);font-weight:700">Consultar</a> ou continue para atualizar.</div>';
-    regData._existingId=existing.id;
+function validateStep1() {
+  const name = document.getElementById('regName').value.trim();
+  const cpf = document.getElementById('regCPF').value.trim();
+  const role = document.getElementById('regRole').value;
+  const school = document.getElementById('regSchool').value.trim();
+  const alertEl = document.getElementById('step1Alert');
+  alertEl.innerHTML = '';
+  if (!name) { alertEl.innerHTML = '<div class="alert alert-danger">Informe o nome completo.</div>'; return false; }
+  if (!cpf || cpf.replace(/\D/g, '').length < 11) { alertEl.innerHTML = '<div class="alert alert-danger">Informe um CPF válido.</div>'; return false; }
+  if (!role) { alertEl.innerHTML = '<div class="alert alert-danger">Selecione o perfil.</div>'; return false; }
+  if (!school) { alertEl.innerHTML = '<div class="alert alert-danger">Informe a Unidade Escolar.</div>'; return false; }
+  const existing = Store.findByCPF(cpf);
+  if (existing) {
+    alertEl.innerHTML = '<div class="alert alert-warning">Já existe inscrição para este CPF. <a href="#" onclick="event.preventDefault();showPage(\'consult\');document.getElementById(\'searchInput\').value=\'' + cpf + '\';searchRegistrations()" style="color:var(--azul-badge-txt);font-weight:700">Consultar</a> ou continue para atualizar.</div>';
+    regData._existingId = existing.id;
   }
-  regData.name=name;regData.cpf=cpf;regData.email=document.getElementById('regEmail').value.trim();
-  regData.phone=document.getElementById('regPhone').value.trim();regData.role=role;regData.school=school;regData.selections={};
-  skippedSessions={};
+  regData.name = name; regData.cpf = cpf; regData.email = document.getElementById('regEmail').value.trim();
+  regData.phone = document.getElementById('regPhone').value.trim(); regData.role = role; regData.school = school; regData.selections = {};
+  skippedSessions = {};
   return true;
 }
 
-function renderWorkshops(){
-  const schedule=SCHEDULE[regData.role];
-  if(!schedule)return;
-  const container=document.getElementById('workshopList');
-  container.innerHTML='';
-  schedule.sessions.forEach(session=>{
-    const card=document.createElement('div');card.className='session-card';
-    let html=`<div class="session-header"><div><h3>${session.theme}</h3></div><div class="session-date"><span class="date-badge">${session.date}/${String(CONFIG.month).substring(0,3)}</span><span class="period-badge">${session.period}</span></div></div><div class="session-audience">👥 ${session.audience}</div>`;
-
-    if(session.fixed){
-      html+=`<div class="session-fixed">✓ ${session.fixedLabel}</div>`;
-      card.innerHTML=html;container.appendChild(card);return;
-    }
-
-    html+=`<div class="session-optional">ⓘ Esta oficina é opcional — escolha ou pule este horário</div>`;
-
+function renderWorkshops() {
+  const schedule = SCHEDULE[regData.role];
+  if (!schedule) return;
+  const container = document.getElementById('workshopList');
+  container.innerHTML = '';
+  schedule.sessions.forEach(session => {
+    const card = document.createElement('div'); card.className = 'session-card';
+    let html = `<div class="session-header"><div><h3>${session.theme}</h3></div><div class="session-date"><span class="date-badge">${session.date}/${String(CONFIG.month).substring(0, 3)}</span><span class="period-badge">${session.period}</span></div></div><div class="session-audience">👥 ${session.audience}</div>`;
+    if (session.fixed) { html += `<div class="session-fixed">✓ ${session.fixedLabel}</div>`; card.innerHTML = html; container.appendChild(card); return; }
+    html += `<div class="session-optional">ⓘ Esta oficina é opcional — escolha ou pule este horário</div>`;
     const isSkipped = skippedSessions[session.id] === true;
-
-    html+=`<label class="session-skip ${isSkipped?'skip-active':''}" onclick="toggleSkip('${session.id}',this)">
-      <input type="checkbox" ${isSkipped?'checked':''}> Não desejo participar deste horário
-    </label>`;
-
-    if(session.workshops){
-      html+=`<div class="workshop-options ${isSkipped?'dimmed':''}" id="wkopts_${session.id}">`;
-      session.workshops.forEach(wk=>{
-        const count=Store.getWorkshopCount(session.id,wk.id);
-        const full=count>=CONFIG.maxPerWorkshop;
-        const pct=Math.round((count/CONFIG.maxPerWorkshop)*100);
-        const barClass=pct>=80?'high':pct>=50?'mid':'low';
-        const isSel=regData.selections[session.id]===wk.id;
-        html+=`<label class="workshop-opt ${full?'disabled':''} ${isSel?'selected':''}" onclick="${full||isSkipped?'':`selectWorkshop('${session.id}','${wk.id}',this)`}"><input type="radio" name="ws_${session.id}" value="${wk.id}" ${isSel?'checked':''} ${full||isSkipped?'disabled':''}><div class="wk-name">${wk.name}</div><div class="wk-cap ${full?'full':''}">${full?'LOTADO':count+'/'+CONFIG.maxPerWorkshop+' vagas'}</div><div class="cap-bar"><div class="cap-bar-fill ${barClass}" style="width:${pct}%"></div></div></label>`;
+    html += `<label class="session-skip ${isSkipped ? 'skip-active' : ''}" onclick="toggleSkip('${session.id}',this)"><input type="checkbox" ${isSkipped ? 'checked' : ''}> Não desejo participar deste horário</label>`;
+    if (session.workshops) {
+      html += `<div class="workshop-options ${isSkipped ? 'dimmed' : ''}" id="wkopts_${session.id}">`;
+      session.workshops.forEach(wk => {
+        const count = Store.getWorkshopCount(session.id, wk.id);
+        const full = count >= CONFIG.maxPerWorkshop;
+        const pct = Math.round((count / CONFIG.maxPerWorkshop) * 100);
+        const barClass = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
+        const isSel = regData.selections[session.id] === wk.id;
+        html += `<label class="workshop-opt ${full ? 'disabled' : ''} ${isSel ? 'selected' : ''}" onclick="${full || isSkipped ? '' : `selectWorkshop('${session.id}','${wk.id}',this)`}"><input type="radio" name="ws_${session.id}" value="${wk.id}" ${isSel ? 'checked' : ''} ${full || isSkipped ? 'disabled' : ''}><div class="wk-name">${wk.name}</div><div class="wk-cap ${full ? 'full' : ''}">${full ? 'LOTADO' : count + '/' + CONFIG.maxPerWorkshop + ' vagas'}</div><div class="cap-bar"><div class="cap-bar-fill ${barClass}" style="width:${pct}%"></div></div></label>`;
       });
-      html+='</div>';
+      html += '</div>';
     }
-    card.innerHTML=html;container.appendChild(card);
+    card.innerHTML = html; container.appendChild(card);
   });
 }
 
-function toggleSkip(sessionId, el){
+function toggleSkip(sessionId, el) {
   const cb = el.querySelector('input');
   skippedSessions[sessionId] = cb.checked;
   el.classList.toggle('skip-active', cb.checked);
-
-  const opts = document.getElementById('wkopts_'+sessionId);
-  if(opts) opts.classList.toggle('dimmed', cb.checked);
-
-  if(cb.checked){
+  const opts = document.getElementById('wkopts_' + sessionId);
+  if (opts) opts.classList.toggle('dimmed', cb.checked);
+  if (cb.checked) {
     delete regData.selections[sessionId];
-    // Deselect all in this group
-    if(opts){
-      opts.querySelectorAll('.workshop-opt').forEach(o=>{
-        o.classList.remove('selected');
-        o.querySelector('input').checked=false;
-      });
-    }
-  } else {
-    // Re-enable clicks
-    if(opts){
-      opts.querySelectorAll('.workshop-opt.disabled').forEach(o=>{
-        // leave truly full ones disabled
-      });
-    }
+    if (opts) opts.querySelectorAll('.workshop-opt').forEach(o => { o.classList.remove('selected'); o.querySelector('input').checked = false; });
   }
 }
 
-function selectWorkshop(sid,wid,el){
-  regData.selections[sid]=wid;
-  const p=el.closest('.workshop-options');
-  p.querySelectorAll('.workshop-opt').forEach(o=>o.classList.remove('selected'));
-  el.classList.add('selected');el.querySelector('input').checked=true;
+function selectWorkshop(sid, wid, el) {
+  regData.selections[sid] = wid;
+  const p = el.closest('.workshop-options');
+  p.querySelectorAll('.workshop-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected'); el.querySelector('input').checked = true;
 }
 
-function validateStep2(){
-  // No mandatory selection needed - user can proceed with any combination
-  return true;
-}
+function validateStep2() { return true; }
 
-function renderConfirmation(){
-  const schedule=SCHEDULE[regData.role];
-  const roleLabels={diretor:'Diretor(a)',coordenador:'Coordenador(a)',professor:'Professor(a)'};
-
-  let html=`<div class="confirm-box"><h4>Dados Pessoais</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.9rem"><div><b>Nome:</b> ${regData.name}</div><div><b>CPF:</b> ${regData.cpf}</div><div><b>Perfil:</b> ${roleLabels[regData.role]}</div><div><b>Escola:</b> ${regData.school}</div>${regData.email?`<div><b>E-mail:</b> ${regData.email}</div>`:''}${regData.phone?`<div><b>Telefone:</b> ${regData.phone}</div>`:''}</div></div>`;
-
-  html+=`<div class="confirm-box"><h4>Atividades Selecionadas</h4><table class="admin-table" style="font-size:.85rem"><thead><tr><th>Data</th><th>Período</th><th>Atividade</th><th>Status</th></tr></thead><tbody>`;
-
-  let hasAny=false;
-  schedule.sessions.forEach(session=>{
-    if(session.fixed){
-      hasAny=true;
-      html+=`<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${session.fixedLabel}</td><td><span class="badge badge-success">FIXA</span></td></tr>`;
-    } else {
-      const sel = session.workshops.find(w=>w.id===regData.selections[session.id]);
-      if(sel){
-        hasAny=true;
-        html+=`<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${sel.name}</td><td><span class="badge badge-info">SELECIONADA</span></td></tr>`;
-      } else {
-        html+=`<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${session.theme}</td><td><span class="badge badge-warning">NÃO SELECIONADA</span></td></tr>`;
-      }
+function renderConfirmation() {
+  const schedule = SCHEDULE[regData.role];
+  const roleLabels = { diretor: 'Diretor(a)', coordenador: 'Coordenador(a)', professor: 'Professor(a)' };
+  let html = `<div class="confirm-box"><h4>Dados Pessoais</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.9rem"><div><b>Nome:</b> ${regData.name}</div><div><b>CPF:</b> ${regData.cpf}</div><div><b>Perfil:</b> ${roleLabels[regData.role]}</div><div><b>Escola:</b> ${regData.school}</div>${regData.email ? `<div><b>E-mail:</b> ${regData.email}</div>` : ''}${regData.phone ? `<div><b>Telefone:</b> ${regData.phone}</div>` : ''}</div></div>`;
+  html += `<div class="confirm-box"><h4>Atividades Selecionadas</h4><table class="admin-table" style="font-size:.85rem"><thead><tr><th>Data</th><th>Período</th><th>Atividade</th><th>Status</th></tr></thead><tbody>`;
+  schedule.sessions.forEach(session => {
+    if (session.fixed) { html += `<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${session.fixedLabel}</td><td><span class="badge badge-success">FIXA</span></td></tr>`; }
+    else {
+      const sel = session.workshops.find(w => w.id === regData.selections[session.id]);
+      if (sel) { html += `<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${sel.name}</td><td><span class="badge badge-info">SELECIONADA</span></td></tr>`; }
+      else { html += `<tr><td><b>${session.date}/${CONFIG.month}</b></td><td>${session.period}</td><td>${session.theme}</td><td><span class="badge badge-warning">NÃO SELECIONADA</span></td></tr>`; }
     }
   });
-  html+='</tbody></table>';
+  html += '</tbody></table></div>';
+  document.getElementById('confirmContent').innerHTML = html;
+}
 
-  if(!hasAny){
-    html+='<div class="alert alert-warning" style="margin-top:12px">Nenhuma oficina foi selecionada. Você será inscrito apenas nas sessões fixas/obrigatórias.</div>';
+async function confirmRegistration() {
+  const btn = document.getElementById('btnConfirm');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  showLoading(true);
+
+  try {
+    if (regData._existingId) await Store.remove(regData._existingId);
+    const saved = await Store.add({
+      name: regData.name, cpf: regData.cpf, email: regData.email,
+      phone: regData.phone, role: regData.role, school: regData.school,
+      selections: { ...regData.selections }
+    });
+    [1, 2, 3].forEach(s => document.getElementById('step' + s).style.display = 'none');
+    document.getElementById('step4').style.display = 'block';
+    document.getElementById('stepsBar').style.display = 'none';
+    renderCard(saved, 'generatedCard');
+    showConfetti();
+    showToast('Inscrição salva com sucesso!', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao salvar. Tente novamente.', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Confirmar Inscrição';
+    showLoading(false);
   }
-
-  html+='</div>';
-  document.getElementById('confirmContent').innerHTML=html;
 }
 
-function confirmRegistration(){
-  if(regData._existingId)Store.remove(regData._existingId);
-  const saved=Store.add({name:regData.name,cpf:regData.cpf,email:regData.email,phone:regData.phone,role:regData.role,school:regData.school,selections:{...regData.selections}});
-  [1,2,3].forEach(s=>document.getElementById('step'+s).style.display='none');
-  document.getElementById('step4').style.display='block';
-  document.getElementById('stepsBar').style.display='none';
-  renderCard(saved,'generatedCard');
-  showConfetti();
-}
-
-function renderCard(reg,cid){
-  const schedule=SCHEDULE[reg.role];
-  const roleLabels={diretor:'Diretor(a)',coordenador:'Coordenador(a)',professor:'Professor(a)'};
-  let rows='';
-  schedule.sessions.forEach(session=>{
-    if(session.fixed){
-      rows+=`<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td><em style="color:var(--verde)">${session.fixedLabel}</em></td></tr>`;
-    } else {
-      const sel=session.workshops.find(w=>w.id===reg.selections[session.id]);
-      if(sel){
-        rows+=`<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td><b>${sel.name}</b></td></tr>`;
-      } else {
-        rows+=`<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td style="color:var(--texto-suave);font-style:italic">Não selecionada</td></tr>`;
-      }
+// ====================================================================
+// CARD
+// ====================================================================
+function renderCard(reg, cid) {
+  const schedule = SCHEDULE[reg.role];
+  const roleLabels = { diretor: 'Diretor(a)', coordenador: 'Coordenador(a)', professor: 'Professor(a)' };
+  if (!schedule) return;
+  let rows = '';
+  schedule.sessions.forEach(session => {
+    if (session.fixed) { rows += `<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td><em style="color:var(--verde)">${session.fixedLabel}</em></td></tr>`; }
+    else {
+      const sel = session.workshops.find(w => w.id === (reg.selections || {})[session.id]);
+      if (sel) { rows += `<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td><b>${sel.name}</b></td></tr>`; }
+      else { rows += `<tr><td><b>${session.date}/${CONFIG.month}/${CONFIG.year}</b></td><td>${session.period}</td><td>${session.theme}</td><td style="color:var(--texto-suave);font-style:italic">Não selecionada</td></tr>`; }
     }
   });
-  document.getElementById(cid).innerHTML=`
+  document.getElementById(cid).innerHTML = `
     <div class="card-preview" id="printableCard">
       <div class="card-preview-header">
         <img class="card-logo" src="https://i.ibb.co/0p01LzxB/logo3de.jpg" alt="SEDUC">
@@ -922,7 +821,7 @@ function renderCard(reg,cid){
           <div class="info-item"><div class="info-label">CPF</div><div class="info-value">${reg.cpf}</div></div>
           <div class="info-item"><div class="info-label">Perfil</div><div class="info-value">${roleLabels[reg.role]}</div></div>
           <div class="info-item"><div class="info-label">Escola</div><div class="info-value">${reg.school}</div></div>
-          ${reg.email?`<div class="info-item"><div class="info-label">E-mail</div><div class="info-value">${reg.email}</div></div>`:''}
+          ${reg.email ? `<div class="info-item"><div class="info-label">E-mail</div><div class="info-value">${reg.email}</div></div>` : ''}
         </div>
         <table class="card-schedule"><thead><tr><th>Data</th><th>Período</th><th>Atividade</th><th>Oficina</th></tr></thead><tbody>${rows}</tbody></table>
       </div>
@@ -930,149 +829,182 @@ function renderCard(reg,cid){
     </div>`;
 }
 
-function printCard(){
-  const card=document.getElementById('printableCard');if(!card)return;
-  document.getElementById('page-print').innerHTML=card.outerHTML;
+function printCard() {
+  const card = document.getElementById('printableCard'); if (!card) return;
+  document.getElementById('page-print').innerHTML = card.outerHTML;
   window.print();
 }
 
-let currentViewingReg=null;
-function searchRegistrations(){
-  const q=document.getElementById('searchInput').value.toLowerCase().trim();
-  const container=document.getElementById('searchResults');
-  document.getElementById('viewCard').style.display='none';
-  if(!q){container.innerHTML='';return;}
-  const results=Store.getAll().filter(r=>r.name.toLowerCase().includes(q)||r.cpf.includes(q)||r.id.toLowerCase().includes(q));
-  const roleLabels={diretor:'Diretor(a)',coordenador:'Coordenador(a)',professor:'Professor(a)'};
-  if(!results.length){container.innerHTML='<div class="alert alert-info">Nenhuma inscrição encontrada.</div>';return;}
-  container.innerHTML=results.map(r=>`<div class="result-card" onclick="viewRegistration('${r.id}')"><div class="result-info"><h4>${r.name}</h4><p>${r.cpf} · ${r.school} · <span class="badge-role">${roleLabels[r.role]}</span></p></div><div><span class="badge badge-info">${r.id}</span></div></div>`).join('');
+// ====================================================================
+// SEARCH
+// ====================================================================
+let currentViewingReg = null;
+function searchRegistrations() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const container = document.getElementById('searchResults');
+  document.getElementById('viewCard').style.display = 'none';
+  if (!q) { container.innerHTML = ''; return; }
+  const results = localCache.filter(r => r.name.toLowerCase().includes(q) || r.cpf.includes(q) || r.id.toLowerCase().includes(q));
+  const roleLabels = { diretor: 'Diretor(a)', coordenador: 'Coordenador(a)', professor: 'Professor(a)' };
+  if (!results.length) { container.innerHTML = '<div class="alert alert-info">Nenhuma inscrição encontrada.</div>'; return; }
+  container.innerHTML = results.map(r => `<div class="result-card" onclick="viewRegistration('${r.id}')"><div class="result-info"><h4>${r.name}</h4><p>${r.cpf} · ${r.school} · <span class="badge-role">${roleLabels[r.role]}</span></p></div><div><span class="badge badge-info">${r.id}</span></div></div>`).join('');
 }
 
-function viewRegistration(id){
-  const reg=Store.findById(id);if(!reg)return;
-  currentViewingReg=reg;
-  document.getElementById('searchResults').innerHTML='';
-  document.getElementById('viewCard').style.display='block';
-  renderCard(reg,'viewCardInner');
+function viewRegistration(id) {
+  const reg = Store.findById(id); if (!reg) return;
+  currentViewingReg = reg;
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('viewCard').style.display = 'block';
+  renderCard(reg, 'viewCardInner');
 }
 
-function deleteCurrentReg(){
-  if(!currentViewingReg)return;
-  if(!confirm('Excluir inscrição de '+currentViewingReg.name+'?'))return;
-  Store.remove(currentViewingReg.id);currentViewingReg=null;
-  document.getElementById('viewCard').style.display='none';
-  document.getElementById('searchInput').value='';
-  searchRegistrations();
+async function deleteCurrentReg() {
+  if (!currentViewingReg) return;
+  if (!confirm('Excluir inscrição de ' + currentViewingReg.name + '?')) return;
+  showLoading(true);
+  try {
+    await Store.remove(currentViewingReg.id);
+    currentViewingReg = null;
+    document.getElementById('viewCard').style.display = 'none';
+    document.getElementById('searchInput').value = '';
+    searchRegistrations();
+    showToast('Inscrição excluída', 'success');
+  } catch (err) {
+    showToast('Erro ao excluir', 'error');
+  } finally {
+    showLoading(false);
+  }
 }
 
-let adminAuthenticated=false;
-function checkAdmin(){
-  const pw=document.getElementById('adminPw').value;
-  const alertEl=document.getElementById('adminPwAlert');
-  if(pw===CONFIG.adminPassword){
-    adminAuthenticated=true;
-    document.getElementById('adminGate').style.display='none';
-    document.getElementById('adminPanel').style.display='block';
+// ====================================================================
+// ADMIN
+// ====================================================================
+let adminAuthenticated = false;
+function checkAdmin() {
+  const pw = document.getElementById('adminPw').value;
+  if (pw === CONFIG.adminPassword) {
+    adminAuthenticated = true;
+    document.getElementById('adminGate').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
     renderAdmin();
-  }else{alertEl.innerHTML='<div class="alert alert-danger" style="margin-top:.5rem">Senha incorreta.</div>';}
+  } else {
+    document.getElementById('adminPwAlert').innerHTML = '<div class="alert alert-danger" style="margin-top:.5rem">Senha incorreta.</div>';
+  }
 }
 
-function renderAdmin(){
-  const all=Store.getAll();
-  const roleLabels={diretor:'Diretores',coordenador:'Coordenadores',professor:'Professores'};
-  const byRole={diretor:0,coordenador:0,professor:0};
-  all.forEach(r=>byRole[r.role]=(byRole[r.role]||0)+1);
-  document.getElementById('adminStats').innerHTML=`
+function renderAdmin() {
+  const all = localCache;
+  const roleLabels = { diretor: 'Diretores', coordenador: 'Coordenadores', professor: 'Professores' };
+  const byRole = { diretor: 0, coordenador: 0, professor: 0 };
+  all.forEach(r => byRole[r.role] = (byRole[r.role] || 0) + 1);
+
+  document.getElementById('adminStats').innerHTML = `
     <div class="stat-card"><div class="stat-value">${all.length}</div><div class="stat-label">Total Inscritos</div></div>
     <div class="stat-card"><div class="stat-value">${byRole.diretor}</div><div class="stat-label">Diretores</div></div>
     <div class="stat-card"><div class="stat-value">${byRole.coordenador}</div><div class="stat-label">Coordenadores</div></div>
     <div class="stat-card"><div class="stat-value">${byRole.professor}</div><div class="stat-label">Professores</div></div>`;
 
-  let capHtml='';
-  Object.entries(SCHEDULE).forEach(([role,data])=>{
-    data.sessions.filter(s=>!s.fixed).forEach(session=>{
-      session.workshops.forEach(wk=>{
-        const count=Store.getWorkshopCount(session.id,wk.id);
-        const pct=Math.round((count/CONFIG.maxPerWorkshop)*100);
-        const rem=CONFIG.maxPerWorkshop-count;
-        const bc=pct>=80?'high':pct>=50?'mid':'low';
-        const badge=rem===0?'badge-danger':rem<=5?'badge-warning':'badge-success';
-        capHtml+=`<tr><td><span class="badge-role">${roleLabels[role]}</span></td><td>${session.date}/${CONFIG.month}</td><td>${session.period}</td><td><b>${wk.name}</b></td><td>${count}/${CONFIG.maxPerWorkshop}</td><td><span class="badge ${badge}">${rem===0?'LOTADO':rem+' vagas'}</span></td><td><div class="cap-bar" style="width:100px"><div class="cap-bar-fill ${bc}" style="width:${pct}%"></div></div></td></tr>`;
+  let capHtml = '';
+  Object.entries(SCHEDULE).forEach(([role, data]) => {
+    data.sessions.filter(s => !s.fixed).forEach(session => {
+      session.workshops.forEach(wk => {
+        const count = Store.getWorkshopCount(session.id, wk.id);
+        const pct = Math.round((count / CONFIG.maxPerWorkshop) * 100);
+        const rem = CONFIG.maxPerWorkshop - count;
+        const bc = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
+        const badge = rem === 0 ? 'badge-danger' : rem <= 5 ? 'badge-warning' : 'badge-success';
+        capHtml += `<tr><td><span class="badge-role">${roleLabels[role]}</span></td><td>${session.date}/${CONFIG.month}</td><td>${session.period}</td><td><b>${wk.name}</b></td><td>${count}/${CONFIG.maxPerWorkshop}</td><td><span class="badge ${badge}">${rem === 0 ? 'LOTADO' : rem + ' vagas'}</span></td><td><div class="cap-bar" style="width:100px"><div class="cap-bar-fill ${bc}" style="width:${pct}%"></div></div></td></tr>`;
       });
     });
   });
-  document.getElementById('tab-capacidade').innerHTML=`<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Perfil</th><th>Data</th><th>Período</th><th>Oficina</th><th>Inscritos</th><th>Status</th><th>Ocupação</th></tr></thead><tbody>${capHtml}</tbody></table></div>`;
+  document.getElementById('tab-capacidade').innerHTML = `<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Perfil</th><th>Data</th><th>Período</th><th>Oficina</th><th>Inscritos</th><th>Status</th><th>Ocupação</th></tr></thead><tbody>${capHtml}</tbody></table></div>`;
 
-  let regHtml='';
-  all.forEach(r=>{
-    const sels=[];
-    if(r.selections)Object.entries(r.selections).forEach(([sid,wid])=>{Object.values(SCHEDULE).forEach(d=>{d.sessions.forEach(s=>{if(s.id===sid&&s.workshops){const wk=s.workshops.find(w=>w.id===wid);sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${wk?wk.name:wid}`);}});});});
-    // Add fixed sessions
-    const sched=SCHEDULE[r.role];
-    if(sched)sched.sessions.filter(s=>s.fixed).forEach(s=>sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${s.fixedLabel} (FIXA)`));
-    regHtml+=`<tr><td><span class="card-id" style="font-size:.72rem">${r.id}</span></td><td><b>${r.name}</b></td><td style="font-family:'DM Mono',monospace;font-size:.78rem">${r.cpf}</td><td><span class="badge-role">${roleLabels[r.role]}</span></td><td>${r.school}</td><td style="font-size:.78rem">${sels.join('<br>')||'—'}</td></tr>`;
+  let regHtml = '';
+  all.forEach(r => {
+    const sels = [];
+    if (r.selections) Object.entries(r.selections).forEach(([sid, wid]) => { Object.values(SCHEDULE).forEach(d => { d.sessions.forEach(s => { if (s.id === sid && s.workshops) { const wk = s.workshops.find(w => w.id === wid); sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${wk ? wk.name : wid}`); } }); }); });
+    const sched = SCHEDULE[r.role];
+    if (sched) sched.sessions.filter(s => s.fixed).forEach(s => sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${s.fixedLabel} (FIXA)`));
+    regHtml += `<tr><td><span class="card-id" style="font-size:.72rem">${r.id}</span></td><td><b>${r.name}</b></td><td style="font-family:'DM Mono',monospace;font-size:.78rem">${r.cpf}</td><td><span class="badge-role">${roleLabels[r.role]}</span></td><td>${r.school}</td><td style="font-size:.78rem">${sels.join('<br>') || '—'}</td></tr>`;
   });
-  document.getElementById('tab-inscritos').innerHTML=`<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Perfil</th><th>Escola</th><th>Atividades</th></tr></thead><tbody>${regHtml||'<tr><td colspan="6" style="text-align:center;color:var(--texto-muted)">Nenhuma inscrição.</td></tr>'}</tbody></table></div>`;
+  document.getElementById('tab-inscritos').innerHTML = `<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Perfil</th><th>Escola</th><th>Atividades</th></tr></thead><tbody>${regHtml || '<tr><td colspan="6" style="text-align:center;color:var(--texto-muted)">Nenhuma inscrição.</td></tr>'}</tbody></table></div>`;
 
-  let dayHtml='';
-  for(let day=15;day<=18;day++){
-    const dc=all.filter(r=>{
-      if(!r.selections)return false;
-      const hasSelection=Object.keys(r.selections).some(sid=>sid.includes(String(day)));
-      const hasFixed=Object.values(SCHEDULE).some(d=>d.sessions.some(s=>s.date===day&&s.fixed));
-      return hasSelection||hasFixed;
+  let dayHtml = '';
+  for (let day = 15; day <= 18; day++) {
+    const dc = all.filter(r => {
+      const hasSel = r.selections && Object.keys(r.selections).some(sid => sid.includes(String(day)));
+      const hasFixed = Object.values(SCHEDULE).some(d => d.sessions.some(s => s.date === day && s.fixed));
+      return hasSel || hasFixed;
     });
-    dayHtml+=`<div class="stat-card" style="text-align:left"><div class="stat-value" style="font-size:1.5rem">${day}/${CONFIG.month}</div><div class="stat-label">${dc.length} inscritos com atividades neste dia</div></div>`;
+    dayHtml += `<div class="stat-card" style="text-align:left"><div class="stat-value" style="font-size:1.5rem">${day}/${CONFIG.month}</div><div class="stat-label">${dc.length} inscritos com atividades neste dia</div></div>`;
   }
-  document.getElementById('tab-por-dia').innerHTML=`<div class="admin-stats">${dayHtml}</div>`;
+  document.getElementById('tab-por-dia').innerHTML = `<div class="admin-stats">${dayHtml}</div>`;
 }
 
-function showAdminTab(tab){
-  document.querySelectorAll('#adminTabs .tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#page-admin .tab-content').forEach(c=>c.classList.remove('active'));
+function showAdminTab(tab) {
+  document.querySelectorAll('#adminTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-admin .tab-content').forEach(c => c.classList.remove('active'));
   event.target.classList.add('active');
-  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
 }
 
-function exportCSV(){
-  const all=Store.getAll();
-  if(!all.length){alert('Nenhuma inscrição.');return;}
-  const rl={diretor:'Diretor',coordenador:'Coordenador',professor:'Professor'};
-  let csv='ID;Nome;CPF;Email;Telefone;Perfil;Escola;Oficinas\n';
-  all.forEach(r=>{
-    const sels=[];
-    if(r.selections)Object.entries(r.selections).forEach(([sid,wid])=>{Object.values(SCHEDULE).forEach(d=>{d.sessions.forEach(s=>{if(s.id===sid&&s.workshops){const wk=s.workshops.find(w=>w.id===wid);sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${wk?wk.name:wid}`);}});});});
-    const sched=SCHEDULE[r.role];
-    if(sched)sched.sessions.filter(s=>s.fixed).forEach(s=>sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${s.fixedLabel} (FIXA)`));
-    csv+=`"${r.id}";"${r.name}";"${r.cpf}";"${r.email||''}";"${r.phone||''}";"${rl[r.role]}";"${r.school}";"${sels.join(' | ')}"\n`;
+function exportCSV() {
+  const all = localCache;
+  if (!all.length) { showToast('Nenhuma inscrição para exportar', 'info'); return; }
+  const rl = { diretor: 'Diretor', coordenador: 'Coordenador', professor: 'Professor' };
+  let csv = 'ID;Nome;CPF;Email;Telefone;Perfil;Escola;Oficinas\n';
+  all.forEach(r => {
+    const sels = [];
+    if (r.selections) Object.entries(r.selections).forEach(([sid, wid]) => { Object.values(SCHEDULE).forEach(d => { d.sessions.forEach(s => { if (s.id === sid && s.workshops) { const wk = s.workshops.find(w => w.id === wid); sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${wk ? wk.name : wid}`); } }); }); });
+    const sched = SCHEDULE[r.role];
+    if (sched) sched.sessions.filter(s => s.fixed).forEach(s => sels.push(`${s.date}/${CONFIG.month} ${s.period}: ${s.fixedLabel} (FIXA)`));
+    csv += `"${r.id}";"${r.name}";"${r.cpf}";"${r.email || ''}";"${r.phone || ''}";"${rl[r.role]}";"${r.school}";"${sels.join(' | ')}"\n`;
   });
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`inscricoes_oficinas_${CONFIG.year}.csv`;a.click();
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `inscricoes_oficinas_${CONFIG.year}.csv`; a.click();
+  showToast('CSV exportado com sucesso', 'success');
 }
 
-function clearAll(){
-  if(!confirm('Excluir TODAS as inscrições? Esta ação é irreversível.'))return;
-  if(!confirm('Tem certeza absoluta?'))return;
-  Store.clearAll();renderAdmin();
-}
-
-function showConfetti(){
-  const box=document.getElementById('confettiBox');box.innerHTML='';
-  const colors=['#c8a951','#0a2f6c','#16a34a','#ffec9e','#d32f2f','#123f7a'];
-  for(let i=0;i<60;i++){
-    const p=document.createElement('div');p.className='confetti-piece';
-    p.style.left=Math.random()*100+'%';p.style.background=colors[Math.floor(Math.random()*colors.length)];
-    p.style.animationDelay=Math.random()*2+'s';p.style.animationDuration=(2+Math.random()*2)+'s';
-    p.style.width=(6+Math.random()*8)+'px';p.style.height=(6+Math.random()*8)+'px';
-    p.style.borderRadius=Math.random()>.5?'50%':'2px';box.appendChild(p);
+async function clearAll() {
+  if (!confirm('Excluir TODAS as inscrições? Esta ação é irreversível.')) return;
+  if (!confirm('Tem certeza absoluta?')) return;
+  showLoading(true);
+  try {
+    await Store.clearAll();
+    showToast('Todas as inscrições foram excluídas', 'success');
+    renderAdmin();
+  } catch (err) {
+    showToast('Erro ao limpar dados', 'error');
+  } finally {
+    showLoading(false);
   }
-  setTimeout(()=>box.innerHTML='',5000);
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('regCPF').addEventListener('input',e=>{let v=e.target.value.replace(/\D/g,'').substring(0,11);if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');else if(v.length>3)v=v.replace(/(\d{3})(\d{1,3})/,'$1.$2');e.target.value=v;});
-  document.getElementById('regPhone').addEventListener('input',e=>{let v=e.target.value.replace(/\D/g,'').substring(0,11);if(v.length>6)v=v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3');else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,'($1) $2');e.target.value=v;});
-  updateHomeStats();
+// ====================================================================
+// CONFETTI
+// ====================================================================
+function showConfetti() {
+  const box = document.getElementById('confettiBox'); box.innerHTML = '';
+  const colors = ['#c8a951', '#0a2f6c', '#16a34a', '#ffec9e', '#d32f2f', '#123f7a'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div'); p.className = 'confetti-piece';
+    p.style.left = Math.random() * 100 + '%'; p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDelay = Math.random() * 2 + 's'; p.style.animationDuration = (2 + Math.random() * 2) + 's';
+    p.style.width = (6 + Math.random() * 8) + 'px'; p.style.height = (6 + Math.random() * 8) + 'px';
+    p.style.borderRadius = Math.random() > .5 ? '50%' : '2px'; box.appendChild(p);
+  }
+  setTimeout(() => box.innerHTML = '', 5000);
+}
+
+// ====================================================================
+// MASKS + INIT
+// ====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('regCPF').addEventListener('input', e => { let v = e.target.value.replace(/\D/g, '').substring(0, 11); if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4'); else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3'); else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2'); e.target.value = v; });
+  document.getElementById('regPhone').addEventListener('input', e => { let v = e.target.value.replace(/\D/g, '').substring(0, 11); if (v.length > 6) v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3'); else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2'); e.target.value = v; });
+
+  // Initialize Firestore listener
+  initFirestoreListener();
 });
 </script>
 </body>
